@@ -30,14 +30,47 @@ body {
     border-bottom: 1px solid #ccc;
 }
 
+.box:hover {
+
+}
+
 .box:last-child {
     border-bottom: none;
 }
 
-.box .img {
+.box .col {
+    display: inline-block;
+    vertical-align: top;
+}
 
+.box .img {
+    width: 25%;
+    margin-right: 10px;
 }
 
 .box .content {
-
+    width: 68%;
 }
+
+.box-title {}
+
+.box-attribute-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 5px 0;
+}
+
+.box-attribute-item {
+    padding-bottom: 5px;
+}
+
+.box-2 .img {
+    width: 15%;
+    margin-right: 10px;
+}
+
+.box-2 .box-attribute-item {
+    display: inline-block;
+    padding-right: 20px;
+}
+
