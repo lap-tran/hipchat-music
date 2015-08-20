@@ -16,7 +16,10 @@ app.use(json());
 var send = require('koa-send');
 var serve = require('koa-static');
 
-var baseUrl = 'http://acf1d01e.ngrok.io';
+var redis = require('redis');
+var redisClient = redis.createClient();
+
+var baseUrl = 'http://10f87af7.ngrok.io';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
@@ -106,6 +109,60 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
       });
     } else {
       that.roomClient.sendNotification('The song "' + videoId + '" already exsists in the playlist');
+    }
+  });
+  
+});
+
+addon.webhook('room_message', /^\/music\sclear$/, function *() {
+  //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
+
+  var that = this;
+
+  var roomId = 'room-' + this.room.id;
+  redisClient.del(roomId, function(err, reply) {
+    that.roomClient.sendNotification('The playlist are now cleared');
+  });
+});
+
+addon.webhook('room_message', /^\/music\sremove\s.*$/, function *() {
+  //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
+
+  var that = this;
+
+  // Get videoId
+  var msg = this.message.message;
+  var videoId = msg.substring(14); // default "/music remove videoId"
+  var vIndex = videoId.indexOf("v=");
+  if (vIndex >= 0) {
+    var andIndex = videoId.indexOf("&", vIndex);
+    if (andIndex <= 0) {
+      videoId = videoId.substring(vIndex + 2);
+    } else {
+      videoId = videoId.substring(vIndex + 2, andIndex);
+    }
+  }
+
+  // Add video to playlist of the room
+  var roomId = 'room-' + this.room.id;
+  redisClient.lrange(roomId, 0, -1, function(err, reply) {
+    videoIndex = reply.indexOf(videoId);
+    if (videoIndex < 0) {
+      that.roomClient.sendNotification('The song "' + videoId + '" doesn\'t exsists in the playlist');
+    } else {
+      reply.splice(videoIndex, 1);
+      var newList = [roomId];
+      for (var i = 0; i < reply.length; i++) {
+        newList.push(reply[i]);
+      }
+      redisClient.del(roomId, function(err, reply) {
+        redisClient.rpush(newList, function (err, reply) {
+          // Get current videos in the room
+          redisClient.lrange(roomId, 0, -1, function(err, reply) {
+            that.roomClient.sendNotification('The playlist are now: "' + reply + '"');
+          });
+        });
+      });
     }
   });
   
