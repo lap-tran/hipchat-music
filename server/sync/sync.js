@@ -73,8 +73,28 @@ function init(io, redisClient, coRedisClient, request) {
             }
         });
 
-        socket.on('video songchanged', function(data) {
+        socket.on('video.change.track', function(data) {
             // send notification to all players
+            co(function *() {
+                yield *_removeSongFromRedis(coRedisClient, that.currentSong.song, 'room-00000', co);
+
+                var body = yield *_getVideo(coRedisClient, request);
+
+                var items = _.reduce(body.items, function(acc, video) {
+                    if (video.id === data.videoId) {
+                        return [video].concat(acc);
+                    } else {
+                        return acc.push(video);
+                    }
+                }, []);
+
+                console.log(items);
+
+                body.items = items;
+
+                that.currentSong = {};
+                socket.emit('video changevideo', body);
+            });
         });
 
         socket.on('disconnect', function(){
