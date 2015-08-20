@@ -1,0 +1,29 @@
+<html>
+    <head>
+        <script type="application/javascript" src="https://code.jquery.com/jquery-1.11.3.js"></script>
+        <script type="application/javascript" src="/assets/js/popup-state.js"></script>
+    </head>
+    
+    <body>
+        <p>
+            <button id="open-popup">Open it</button>
+        </p>
+        <p id="tracker">
+            Checking...
+        </p>
+        <script type="application/javascript">
+            $("#open-popup").click(function() {
+                window.open('/test/popup.html', 'samewindow');
+                $('#tracker').text('Open');
+            });
+
+            if (PopupState.isOpen('my-popup')) {
+                $('#tracker').text('Open');
+            }
+
+            PopupState.trackClose('my-popup').done(function() {
+                $('#tracker').text('Close');
+            });
+        </script>
+    </body>
+</html>
