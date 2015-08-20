@@ -12,11 +12,13 @@ var PopupState = (function() {
 
     function trackClose(name) {
         var closed = $.Deferred();
-        setInterval(function() {
+        var handler = setInterval(function() {
                 var lastTime = localStorage.getItem(key(name));
                 lastTime = lastTime ? parseInt(lastTime) : 0;
 
-                if (new Date().getTime() - lastTime > 1000) {
+                var current = new Date().getTime();
+                if (current - lastTime > 1000) {
+                    clearInterval(handler);
                     closed.resolve();
                 }
             }, 500);
@@ -24,8 +26,15 @@ var PopupState = (function() {
         return closed;
     }
     
+    function isOpen(name) {
+        var lastTime = localStorage.getItem(key(name));
+        lastTime = lastTime ? parseInt(lastTime) : 0;
+        return new Date().getTime() - lastTime < 1000;
+    }
+
     return {
         registerOpen: registerOpen,
-        trackClose: trackClose
+        trackClose: trackClose,
+        isOpen: isOpen
     };
 })();
