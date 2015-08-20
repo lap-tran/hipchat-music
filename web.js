@@ -10,7 +10,6 @@ var app = ack(pkg);
 
 var json = require('koa-json');
 var route = require('koa-route');
-var serve = require('koa-static-folder');
 
 app.use(json());
 
