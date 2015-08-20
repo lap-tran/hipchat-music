@@ -24,7 +24,7 @@ function createPlaylist(items) {
     var tmpItem = $('#queue-item').html();
     var tempArr = [];
     $.each(items, function(index, value) {
-        var dur = secondsToTime(convert_time(value.contentDetails.duration) * 1000 + '');
+        var dur = secondsToTime(convert_time(value.contentDetails.duration) + '');
         tempArr.push(Mustache.render(tmpItem, {
             title: value.snippet.title,
             thumb: value.snippet.thumbnails.default.url,
