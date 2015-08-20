@@ -16,28 +16,29 @@ socket.emit('register', {token: '1234'});
 var isLivePlayer = window.location.href.indexOf("livePlayerId=") != -1;
 if (isLivePlayer) {
     PopupState.registerOpen("livePlayer");
+    enableControls(false);
 } else if (PopupState.isOpen("livePlayer")) {
-    enableLivePlayer(false);
+    enableControls(false);
     PopupState.trackClose("livePlayer").done(function() {
-        enableLivePlayer(true);
+        enableControls(true);
         player && player.unMute();
     });
 }
 
 $(".live-player").click(function() {
     window.open("/page?livePlayerId=1234", "livePlayer", "'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=420, height=600");
-    enableLivePlayer(false);
+    enableControls(false);
     player && player.mute();
     setTimeout(function() {
         PopupState.trackClose("livePlayer").done(function() {
-            enableLivePlayer(true);
+            enableControls(true);
             player && player.unMute();
         });
     }, 5000);
 
 });
 
-function enableLivePlayer(enable) {
+function enableControls(enable) {
     if (enable) {
         $(".group-content .controls").parent().parent().show();
     } else {
@@ -124,7 +125,7 @@ function onPlayerReady(event) {
     event.target.playVideo();
     player.setPlaybackQuality('small');
 
-    if (!$(".group-content .controls").is(":visible")) {
+    if (!isLivePlayer && !$(".group-content .controls").is(":visible")) {
         player.mute();
     }
     
@@ -160,10 +161,12 @@ function updateClipInfo() {
 }
 
 function updateTimeclasp() {
-    var run = function() {
+    setInterval(function() {
         var current = secondsToTime(player.getCurrentTime());
         $('.playing .timeclasp').text(current.m +':'+ current.s);
-
+    }, 250);
+    
+    var run = function() {
         socket.emit('video timechanged', {
             token: '1234',
             song: player.getVideoData().video_id,
@@ -171,7 +174,7 @@ function updateTimeclasp() {
         });
     };
 
-    timer = setInterval(run, 1000);
+    timer = setInterval(run, 500);
 }
 
 function updateDuration() {
