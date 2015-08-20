@@ -87,14 +87,11 @@ var addon = app.addon(
   .scopes('send_notification');
 
 addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
-  //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
+    var that = this;
 
-  var that = this;
-
-  // Get videoId
-  var msg = this.message.message;
-  var searchParam = msg.substring(11); // default "/music add videoId"
-
+    // Get videoId
+    var msg = this.message.message;
+    var searchParam = msg.substring(11);
     var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
     var query = searchParam;
     if (query == null) {
@@ -147,20 +144,26 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
 
   // Add video to playlist of the room
   // var roomId = 'room-' + this.room.id;
-  var roomId = 'room-' + hardcodedRoomId;
-  redisClient.lrange(roomId, 0, -1, function(err, reply) {
-    if (reply.indexOf(videoId) < 0) {
-      redisClient.rpush([roomId, JSON.stringify(storedObject)], function (err, reply) {
-        that.roomClient.sendNotification('Added a song into the playlist: "' + title + '"');
+    var roomId = 'room-' + hardcodedRoomId;
+    redisClient.lrange(roomId, 0, -1, function(err, reply) {
+        if (reply.indexOf(videoId) < 0) {
+            redisClient.rpush([roomId, JSON.stringify(storedObject)], function (err, reply) {
+                that.roomClient.sendNotification('Added a song into the playlist: "' + title + '"');
+            });
+        } else {
+            that.roomClient.sendNotification('The song "' + title + '" already exsists in the playlist');
+        }
 
-        // Get current videos in the room
-        // redisClient.lrange(roomId, 0, -1, function(err, reply) {
-        //   that.roomClient.sendNotification('The playlist is now: "' + reply + '"');
-        // });
-      });
-    } else {
-      that.roomClient.sendNotification('The song "' + title + '" already exsists in the playlist');
-    }
+        co(function* () {
+            var videos = yield * getVideos('00000');
+            if (videos.items.length && sync.currentSong) {
+                videos.items[0].seekTo = sync.currentSong.current;
+            }
+
+            console.log(videos);
+
+            io.sockets.emit('video changevideo', body);
+        });
   });
 });
 
@@ -284,19 +287,19 @@ function * getVideos(id) {
         return {items: {}};
     }
 
-        var body = JSON.parse(response.body);
+    var body = JSON.parse(response.body);
 
-        body.items = _.map(body.items, function(tubeSong) {
-            var matchingStoredSong = _.find(storedSongs, function(stored) {
-                return stored.videoId = tubeSong.id;
-            });
-            if (matchingStoredSong) {
-                tubeSong.sender = matchingStoredSong.sender;
-            }
-            return tubeSong
+    body.items = _.map(body.items, function(tubeSong) {
+        var matchingStoredSong = _.find(storedSongs, function(stored) {
+            return stored.videoId = tubeSong.id;
         });
+        if (matchingStoredSong) {
+            tubeSong.sender = matchingStoredSong.sender;
+        }
+        return tubeSong
+    });
 
-        return body;
+    return body;
 }
 
 app.use(route.get('/room/:id', function *(id){

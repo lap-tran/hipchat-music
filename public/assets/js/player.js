@@ -25,7 +25,7 @@ function createPlaylist(items) {
     var tempArr = [];
     //console.log(items);
     $.each(items, function(index, value) {
-        var dur = secondsToTime(convert_time(value.contentDetails.duration) * 1000 + '');
+        var dur = secondsToTime(convert_time(value.contentDetails.duration) + '');
         tempArr.push(Mustache.render(tmpItem, {
             videoId: value.id,
             title: value.snippet.title,
