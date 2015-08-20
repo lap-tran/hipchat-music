@@ -21,7 +21,6 @@ function onYouTubeIframeAPIReady() {
 }
 
 function createPlaylist(items) {
-    console.log(items);
     var tmpItem = $('#queue-item').html();
     var tempArr = [];
     $.each(items, function(index, value) {
@@ -38,6 +37,11 @@ function createPlaylist(items) {
 }
 
 function createFirstPlay(videoId) {
+    if (player) {
+        player.loadVideoById(videoId);
+        return player;
+    }
+
     return new YT.Player('player', {
         height: '0',
         width: '0',
@@ -64,14 +68,22 @@ function addListener() {
 function onPlayerReady(event) {
     event.target.playVideo();
     player.setPlaybackQuality('small');
+
+    if (currentTrack.seekTo) {
+        player.seekTo(currentTrack.seekTo);
+    }
     updateClipInfo();
     addListener();
 }
 
 function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.PLAYING) {
-        // Here we can start next one
-        console.log(player.getCurrentTime());
+
+    } else if (event.data == YT.PlayerState.ENDED) {
+        console.log('end song ====================');
+        socket.emit('video.end', {
+            song: player.getVideoData().video_id
+        });
     }
 }
 
@@ -160,4 +172,13 @@ function convert_time(duration) {
     }
     return duration
 }
+
+socket.on('video changevideo', function(body){
+    console.log(body);
+    var items = body.items;
+    currentTrack = items.shift();
+    player = createFirstPlay(currentTrack.id);
+
+    createPlaylist(items);
+});
 

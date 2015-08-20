@@ -18,7 +18,7 @@ app.use(json());
 // THUAN: Render template
 var render = require('./lib/render');
 
-var baseUrl = require('./lib/app-base-url.js').baseUrl;
+//var baseUrl = require('./lib/app-base-url.js').baseUrl;
 
 // THUAN: Redis
 var redis = require('redis');
@@ -85,17 +85,6 @@ var addon = app.addon(
   .allowRoom(true)
   // Provide the list of permissions scopes the add-on requires
   .scopes('send_notification');
-
-// Subscribe to the 'room_enter' webhook, and provide an event listener.  Under
-// the covers, this adds a webhook entry to the add-on descriptor, mounts a common
-// webhook endpoint on the Koa app, and brokers webhook POST requests to the event
-// listener as appropriate
-addon.webhook('room_enter', function *() {
-  // 'this' is a Koa context object, containing standard Koa request and response
-  // contextual information as well as hipchat-specific models and services that
-  // make handling the webhook as simple as possible
-  yield this.roomClient.sendNotification('Hi, ' + this.sender.name + '!');
-});
 
 addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
   //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
@@ -165,70 +154,14 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
         that.roomClient.sendNotification('Added a song into the playlist: "' + title + '"');
 
         // Get current videos in the room
-        redisClient.lrange(roomId, 0, -1, function(err, reply) {
-          that.roomClient.sendNotification('The playlist is now: "' + reply + '"');
-        });
+        // redisClient.lrange(roomId, 0, -1, function(err, reply) {
+        //   that.roomClient.sendNotification('The playlist is now: "' + reply + '"');
+        // });
       });
     } else {
       that.roomClient.sendNotification('The song "' + title + '" already exsists in the playlist');
     }
   });
-});
-
-addon.webhook('room_message', /^\/music\sclear$/, function *() {
-  //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
-
-  var that = this;
-
-  // var roomId = 'room-' + this.room.id;
-  var roomId = 'room-' + hardcodedRoomId;
-  redisClient.del(roomId, function(err, reply) {
-    that.roomClient.sendNotification('The playlist are now cleared');
-  });
-});
-
-addon.webhook('room_message', /^\/music\sremove\s.*$/, function *() {
-  //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
-
-  var that = this;
-
-  // Get videoId
-  var msg = this.message.message;
-  var videoId = msg.substring(14); // default "/music remove videoId"
-  var vIndex = videoId.indexOf("v=");
-  if (vIndex >= 0) {
-    var andIndex = videoId.indexOf("&", vIndex);
-    if (andIndex <= 0) {
-      videoId = videoId.substring(vIndex + 2);
-    } else {
-      videoId = videoId.substring(vIndex + 2, andIndex);
-    }
-  }
-
-  // Add video to playlist of the room
-  //var roomId = 'room-' + this.room.id;
-  var roomId = 'room-' + hardcodedRoomId;
-  redisClient.lrange(roomId, 0, -1, function(err, reply) {
-    videoIndex = reply.indexOf(videoId);
-    if (videoIndex < 0) {
-      that.roomClient.sendNotification('The song "' + videoId + '" doesn\'t exsists in the playlist');
-    } else {
-      reply.splice(videoIndex, 1);
-      var newList = [roomId];
-      for (var i = 0; i < reply.length; i++) {
-        newList.push(reply[i]);
-      }
-      redisClient.del(roomId, function(err, reply) {
-        redisClient.rpush(newList, function (err, reply) {
-          // Get current videos in the room
-          redisClient.lrange(roomId, 0, -1, function(err, reply) {
-            that.roomClient.sendNotification('The playlist are now: "' + reply + '"');
-          });
-        });
-      });
-    }
-  });
-  
 });
 
 addon.webhook('room_message', /^\/music\sclear$/, function *() {
@@ -307,9 +240,12 @@ app.use(route.get('/page', function *(){
     // yield send(this, __dirname + "/templates/index.html");
 
     var videos = yield * getVideos('00000');
+    if (videos.items.length && sync.currentSong) {
+        videos.items[0].seekTo = sync.currentSong.current;
+    }
 
     yield this.render('index', {
-      videos: JSON.stringify(videos)
+        videos: JSON.stringify(videos)
     });
 }));
 
@@ -385,18 +321,9 @@ var co = require("co");
 var server = require('http').createServer(app.callback());
 var io = require('socket.io')(server);
 
-var currentSong = {
+var _ = require('underscore');
 
-};
-
-io.on('connection', function(socket){
-    socket.on('register', function(token) {
-        console.log('user has been registed with token ' + token);
-    });
-
-    socket.on('video timechanged', function(data) {
-        console.log(data);
-    });
-});
+var sync = require('./server/sync/sync.js');
+sync.init(io, redisClient, coRedisClient, request);
 
 server.listen(3000);
