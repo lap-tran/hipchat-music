@@ -14,9 +14,9 @@ var route = require('koa-route');
 app.use(json());
 
 // THUAN: Render template
-var render = require('./lib/render');
+var send = require('koa-send');
 
-var baseUrl = 'http://c8932945.ngrok.io';
+var baseUrl = 'http://10f87af7.ngrok.io';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
@@ -97,8 +97,8 @@ app.use(route.get('/page', function *(){
     this.body = '<iframe width="300" src="https://www.youtube.com/embed/JjDcrUsM7AE" frameborder="0" allowfullscreen></iframe>';
 }));
 
-app.use(route.get('/template', function *(next){
-  this.body = yield render('index');
+app.use(route.get('/template', function *(){
+  yield send(this, __dirname + "/templates/index.html");
 }));
 
 // Now that the descriptor has been defined along with a useful webhook handler,
