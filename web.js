@@ -320,44 +320,42 @@ function * getVideos(id) {
     // var apiKey = process.env.YOUTUBE_API_KEY;
     var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
 
-    var videoIds = null;
+    var videoIds = '';
+    var response;
 
-    var response = {body: ''};
-
-    var reply = yield coRedisClient.lrange(roomId, 0, -1);
-    reply = _.map(reply, function (string) {
+    var storedSongs = yield coRedisClient.lrange(roomId, 0, -1);
+    storedSongs = _.map(storedSongs, function (string) {
         return JSON.parse(string);
     });
 
-    if (reply != undefined) {
-        videoIds = _.pluck(reply, 'videoId').join(',');
-        if (videoIds == null || videoIds == undefined) {
-          videoIds = '';
-        }
+    if (typeof storedSongs === "object") {
+        videoIds = _.pluck(storedSongs, 'videoId').join(',');
     }
 
     if (videoIds !== '') {
-          response = yield request.get({
-              url: 'https://www.googleapis.com/youtube/v3/videos',
-              qs: {
-                  key: apiKey,
-                  part: 'contentDetails,snippet',
-                  type: 'video',
-                  id: videoIds,
-                  fields: 'items(id,snippet(title,thumbnails(default)),contentDetails(duration))',
-                  videoCategoryId: 'music' // not sure if this makes results better or worse
-              }
-          });
-        }
+        response = yield request.get({
+            url: 'https://www.googleapis.com/youtube/v3/videos',
+            qs: {
+                key: apiKey,
+                part: 'contentDetails,snippet',
+                type: 'video',
+                id: videoIds,
+                fields: 'items(id,snippet(title,thumbnails(default)),contentDetails(duration))',
+                videoCategoryId: 'music' // not sure if this makes results better or worse
+            }
+        });
+    } else {
+        return "No results found.";
+    }
 
         var body = JSON.parse(response.body);
 
         body.items = _.map(body.items, function(tubeSong) {
-            var storedSong = _.find(reply, function(song) {
-                return song.videoId = tubeSong.id;
+            var matchingStoredSong = _.find(storedSongs, function(stored) {
+                return stored.videoId = tubeSong.id;
             });
-            if (storedSong) {
-                tubeSong.sender = storedSong.sender;
+            if (matchingStoredSong) {
+                tubeSong.sender = matchingStoredSong.sender;
             }
             return tubeSong
         });
