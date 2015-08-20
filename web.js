@@ -375,18 +375,11 @@ var request = require("co-request");
 var server = require('http').createServer(app.callback());
 var io = require('socket.io')(server);
 
-var currentSong = {
+var _ = require('underscore');
 
-};
+var sync = require('./server/sync/sync.js');
+sync.init(io, _);
 
-io.on('connection', function(socket){
-    socket.on('register', function(token) {
-        console.log('user has been registed with token ' + token);
-    });
 
-    socket.on('video timechanged', function(data) {
-        console.log(data);
-    });
-});
 
 server.listen(3000);
