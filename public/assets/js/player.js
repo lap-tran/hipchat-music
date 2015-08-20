@@ -53,7 +53,9 @@ function stopVideo() {
 function updateClipInfo() {
     updateTimeclasp();
     updateDuration();
-    $('.playing .box-title').text(player.getVideoData().title);
+    var data = player.getVideoData();
+    $('.playing .box-title').text(data.title);
+    $('.playing .img').attr('src', '//img.youtube.com/vi/'+ data.video_id +'/0.jpg');
 }
 
 function updateTimeclasp() {
