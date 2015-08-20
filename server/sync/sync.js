@@ -1,6 +1,7 @@
 "use strict";
 
 var _ = require('underscore');
+var co = require('co');
 
 var Sync = function() {
     return {
@@ -11,7 +12,7 @@ var Sync = function() {
     }
 };
 
-function init(io, redisClient, coRedisClient, co, request) {
+function init(io, redisClient, coRedisClient, request) {
     var that = this;
 
     io.on('connection', function(socket) {
@@ -47,37 +48,26 @@ function init(io, redisClient, coRedisClient, co, request) {
             // event fired when song is finish in one player
             that.numberFinish++;
 
-            if (that.numberFinish === that.numberListeners) {
+            // move to next song
+            function nextSong() {
                 // move to next song
+                co(function *() {
+                    yield *_removeSongFromRedis(coRedisClient, data.song, 'room-00000', co);
 
+                    var body = yield *_getVideo(coRedisClient, request);
+                    socket.emit('video changevideo', body);
+                });
+            }
+
+            if (that.numberFinish === that.numberListeners) {
                 console.log('move to next song');
                 //remove the finish one from redis
                 // TODO replace hardcode room with right one
-                _removeSongFromRedis(coRedisClient, data.song, 'room-00000', co);
-
-                var playlist = _getVideo(coRedisClient, co, request);
-
-                console.log(playlist);
-
-                if (nextSongTimeout) {
-                    clearTimeout(nextSongTimeout);
-                }
+                nextSong();
             } else {
                 if(!nextSongTimeout) {
                     console.log('wait for another end!!')
-                    nextSongTimeout = setTimeout(function() {
-                        // move to next song
-                        co(function *() {
-                            _removeSongFromRedis(coRedisClient, data.song, 'room-00000', co);
-
-                            console.log(JSON.stringify(data));
-
-                            var playlist = _getVideo(coRedisClient, co, request);
-
-                            console.log(playlist);
-
-                        });
-                    }, 2000);
+                    nextSongTimeout = setTimeout(nextSong, 2000);
                 }
             }
         });
@@ -92,80 +82,63 @@ function init(io, redisClient, coRedisClient, co, request) {
     });
 };
 
-function _removeSongFromRedis(coRedisClient, video, roomId, co) {
-    console.log("remove song " + video);
+function *_removeSongFromRedis(coRedisClient, video, roomId, co) {
+        console.log("remove song " + video);
 
     // coRedisClient.ltrim(roomId, 1, )
 
-    co(function* () {
-        return yield coRedisClient.lrange(roomId, 0, -1);
-    }).then(function(reply) {
-        console.log("REPLY ---- " + JSON.stringify(reply));
+        var allSongs = yield coRedisClient.lrange(roomId, 0, -1);
+
+        console.log("REPLYxxx ---- " + JSON.stringify(allSongs));
 
         var videoIndex = -1;
-        for (var i = 0; i < reply.length; i++) {
-            var vo = JSON.parse(reply[i]);
+        for (var i = 0; i < allSongs.length; i++) {
+            console.log(allSongs[i]);
+            var vo = JSON.parse(allSongs[i]);
+
             if (vo.videoId === video) {
                 videoIndex = i;
                 break;
             }
+
         }
+
         if (videoIndex < 0) {
             console.log('The song "' + video + '" doesn\'t exsists in the playlist');
         } else {
-            reply.splice(videoIndex, 1);
+            allSongs.splice(videoIndex, 1);
             var newList = [roomId];
-            for (var i = 0; i < reply.length; i++) {
-                newList.push(reply[i]);
+            for (var i = 0; i < allSongs.length; i++) {
+                newList.push(allSongs[i]);
             }
-
-            co(function* () {
-                return yield coRedisClient.del(roomId);
-            }).then( function() {
-                co(function* () {
-                    return yield coRedisClient.rpush(newList);
-                }).then(function (reply) {
-                    // Get current videos in the room
-                    co(function* () {
-                        return yield redisClient.lrange(roomId, 0, -1);
-                    }).then(function(reply) {
-                        console.log('The playlist are now: "' + reply + '"');
-                    });
-                });
-            });
+            var y = yield coRedisClient.del(roomId);
+            console.log("DEL ROOm " + y);
+            yield coRedisClient.rpush(newList);
+            console.log("REMOVE to " + newList);
         }
-    });
 }
 
-function _getVideo(coRedisClient, co, request) {
-    var roomId = 'room-00000';
+function *_getVideo(coRedisClient, request) {
+        // var roomId = 'room-' + id;
+        var roomId = 'room-00000';
 
-    // var apiKey = process.env.YOUTUBE_API_KEY;
-    var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
+        // var apiKey = process.env.YOUTUBE_API_KEY;
+        var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
 
-    var videoIds = '';
-    var response;
+        var videoIds = '';
+        var response;
 
-    var storedSongs = co(function *() {
-        return yield coRedisClient.lrange(roomId, 0, -1);
-    }).then(function(storedSongs) {
-        console.log("11111111 \n" + JSON.stringify(storedSongs));
-        return storedSongs;
-    });
+        var storedSongs = yield coRedisClient.lrange(roomId, 0, -1);
+        storedSongs = _.map(storedSongs, function (string) {
+            return JSON.parse(string);
+        });
 
-    console.log("22222222 \n" + JSON.stringify(storedSongs));
+        if (typeof storedSongs === "object") {
+            videoIds = _.pluck(storedSongs, 'videoId').join(',');
+        }
 
-    storedSongs = _.map(storedSongs, function (string) {
-        return JSON.parse(string);
-    });
-
-    if (typeof storedSongs === "object") {
-        videoIds = _.pluck(storedSongs, 'videoId').join(',');
-    }
-
-    if (videoIds !== '') {
-        response = co(function *() {
-            return yield request.get({
+        if (videoIds !== '') {
+            response = yield request.get({
                 url: 'https://www.googleapis.com/youtube/v3/videos',
                 qs: {
                     key: apiKey,
@@ -176,26 +149,23 @@ function _getVideo(coRedisClient, co, request) {
                     videoCategoryId: 'music' // not sure if this makes results better or worse
                 }
             });
-        });
-    } else {
-        return {items: {}};
-    }
-
-    console.log(response);
-
-    var body = JSON.parse(response.body);
-
-    body.items = _.map(body.items, function(tubeSong) {
-        var matchingStoredSong = _.find(storedSongs, function(stored) {
-            return stored.videoId = tubeSong.id;
-        });
-        if (matchingStoredSong) {
-            tubeSong.sender = matchingStoredSong.sender;
+        } else {
+            return {items: {}};
         }
-        return tubeSong
-    });
 
-    return body;
-}
+        var body = JSON.parse(response.body);
+
+        body.items = _.map(body.items, function(tubeSong) {
+            var matchingStoredSong = _.find(storedSongs, function(stored) {
+                return stored.videoId = tubeSong.id;
+            });
+            if (matchingStoredSong) {
+                tubeSong.sender = matchingStoredSong.sender;
+            }
+            return tubeSong
+        });
+
+        return body;
+    }
 
 module.exports = new Sync();
