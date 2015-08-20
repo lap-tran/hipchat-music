@@ -17,7 +17,7 @@ app.use(json());
 var send = require('koa-send');
 var serve = require('koa-static');
 
-var baseUrl = 'http://91b4c6d4.ngrok.io';
+var baseUrl = require('./lib/app-base-url.js').baseUrl;
 
 app.use(serve(__dirname + '/public'));
 
