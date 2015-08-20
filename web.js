@@ -25,7 +25,14 @@ var coRedisClient = coRedis(redisClient);
 
 app.use(serve(__dirname + '/public'));
 
-var baseUrl = 'http://acf1d01e.ngrok.io';
+var views = require('koa-views');
+app.use(views(__dirname + "/templates", {
+  map: {
+    html: 'underscore'
+  }
+}));
+
+var baseUrl = 'http://a95c4e51.ngrok.io';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
@@ -282,7 +289,10 @@ app.use(route.get('/glance', function *(next){
 }));
 
 app.use(route.get('/page', function *(){
-    yield send(this, __dirname + "/templates/index.html");
+    // yield send(this, __dirname + "/templates/index.html");
+    yield this.render('index', {
+      name: 'Unbelievable'
+    });
 }));
 
 app.use(route.get('/room/:id', function *(id){
