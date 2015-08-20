@@ -88,6 +88,10 @@ function init(io, redisClient, coRedisClient, co, request) {
 
         socket.on('disconnect', function(){
             that.numberListeners--;
+
+            if (that.numberListeners <= 0) {
+                that.currentSong = {};
+            }
         });
     });
 };

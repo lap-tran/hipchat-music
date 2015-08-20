@@ -251,7 +251,7 @@ app.use(route.get('/page', function *(){
     // yield send(this, __dirname + "/templates/index.html");
 
     var videos = yield * getVideos('00000');
-    if (videos.items.length) {
+    if (videos.items.length && sync.currentSong) {
         videos.items[0].seekTo = sync.currentSong.current;
     }
 
