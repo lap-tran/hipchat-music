@@ -55,6 +55,7 @@ function init(io, redisClient, coRedisClient, request) {
                     yield *_removeSongFromRedis(coRedisClient, data.song, 'room-00000', co);
 
                     var body = yield *_getVideo(coRedisClient, request);
+                    console.log(body);
                     socket.emit('video changevideo', body);
                 });
             }

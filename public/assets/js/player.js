@@ -37,6 +37,11 @@ function createPlaylist(items) {
 }
 
 function createFirstPlay(videoId) {
+    if (player) {
+        player.loadVideoById(videoId);
+        return player;
+    }
+
     return new YT.Player('player', {
         height: '0',
         width: '0',
@@ -75,6 +80,7 @@ function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.PLAYING) {
 
     } else if (event.data == YT.PlayerState.ENDED) {
+        console.log('end song ====================');
         socket.emit('video.end', {
             song: player.getVideoData().video_id
         });
@@ -166,4 +172,13 @@ function convert_time(duration) {
     }
     return duration
 }
+
+socket.on('video changevideo', function(body){
+    console.log(body);
+    var items = body.items;
+    currentTrack = items.shift();
+    player = createFirstPlay(currentTrack.id);
+
+    createPlaylist(items);
+});
 
