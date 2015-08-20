@@ -344,7 +344,7 @@ var server = require('http').createServer(app.callback());
 var io = require('socket.io')(server);
 
 var currentSong = {
-    
+
 };
 
 io.on('connection', function(socket){
