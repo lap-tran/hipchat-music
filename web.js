@@ -309,7 +309,7 @@ app.use(route.get('/page', function *(){
     var videos = yield * getVideos('00000');
 
     yield this.render('index', {
-      videos: videos
+      videos: JSON.stringify(videos)
     });
 }));
 
@@ -345,7 +345,7 @@ function * getVideos(id) {
             }
         });
     } else {
-        return "No results found.";
+        return {items: {}};
     }
 
         var body = JSON.parse(response.body);

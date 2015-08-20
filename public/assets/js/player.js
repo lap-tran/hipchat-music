@@ -6,6 +6,7 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 var player;
 var timer;
+var currentTrack;
 
 var socket = io();
 
@@ -13,9 +14,9 @@ socket.emit('register', {token: '1234'});
 
 function onYouTubeIframeAPIReady() {
     var items = VIDEO_LIST.items;
-    player = createFirstPlay(items[0].id)
+    currentTrack = items.shift();
+    player = createFirstPlay(currentTrack.id);
 
-    items.shift();
     createPlaylist(items);
 }
 
@@ -28,7 +29,8 @@ function createPlaylist(items) {
         tempArr.push(Mustache.render(tmpItem, {
             title: value.snippet.title,
             thumb: value.snippet.thumbnails.default.url,
-            duration: dur.m +':'+ dur.s
+            duration: dur.m +':'+ dur.s,
+            sender: value.sender
         }));
     });
 
@@ -84,6 +86,7 @@ function updateClipInfo() {
     var data = player.getVideoData();
     $('.playing .box-title').text(data.title);
     $('.playing .img').attr('src', '//img.youtube.com/vi/'+ data.video_id +'/0.jpg');
+    $('.playing .sender').text(currentTrack.sender);
 }
 
 function updateTimeclasp() {
