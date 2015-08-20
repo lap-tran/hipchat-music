@@ -16,6 +16,11 @@ app.use(json());
 // THUAN: Render template
 var send = require('koa-send');
 
+// THUAN: Redis
+var redis = require('redis');
+var redisClient = redis.createClient();
+// var redisClient = redis.createClient(port, host);
+
 var baseUrl = 'http://10f87af7.ngrok.io';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
@@ -71,8 +76,41 @@ addon.webhook('room_enter', function *() {
   yield this.roomClient.sendNotification('Hi, ' + this.sender.name + '!');
 });
 
-addon.webhook('room_message', /^\/hello$/, function *() {
-  yield this.roomClient.sendNotification('Hi, ' + this.sender.name + '!');
+addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
+  //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
+
+  var that = this;
+
+  // Get videoId
+  var msg = this.message.message;
+  var videoId = msg.substring(11); // default "/music add videoId"
+  var vIndex = videoId.indexOf("v=");
+  if (vIndex >= 0) {
+    var andIndex = videoId.indexOf("&", vIndex);
+    if (andIndex <= 0) {
+      videoId = videoId.substring(vIndex + 2);
+    } else {
+      videoId = videoId.substring(vIndex + 2, andIndex);
+    }
+  }
+
+  // Add video to playlist of the room
+  var roomId = this.room.id;
+  redisClient.lrange('room-' + roomId, 0, -1, function(err, reply) {
+    if (reply.indexOf(videoId) < 0) {
+      redisClient.rpush(['room-' + roomId, videoId], function (err, reply) {
+        that.roomClient.sendNotification('Added youtude id into the playlist: "' + videoId + '"');
+
+        // Get current videos in the room
+        redisClient.lrange('room-' + roomId, 0, -1, function(err, reply) {
+          that.roomClient.sendNotification('The playlist are now: "' + reply + '"');
+        });
+      });
+    } else {
+      that.roomClient.sendNotification('The song "' + videoId + '" already exsists in the playlist');
+    }
+  });
+  
 });
 
 app.use(route.get('/glance', function *(next){
