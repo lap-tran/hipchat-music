@@ -14,6 +14,7 @@ var Sync = function() {
 
 function init(io, redisClient, coRedisClient, request) {
     var that = this;
+    var nextSongTimeout;
 
     io.on('connection', function(socket) {
         that.numberListeners++;
@@ -21,7 +22,6 @@ function init(io, redisClient, coRedisClient, request) {
         console.log('Now ' + that.numberListeners + " is listening!");
 
         socket.on('register', function(token) {
-            //console.log('user has been registed with token ' + token);
 
         });
 
@@ -39,12 +39,11 @@ function init(io, redisClient, coRedisClient, request) {
 
                 }
             }
-
-            console.log(JSON.stringify(that.currentSong));
         });
 
-        var nextSongTimeout;
         socket.on('video.end', function(data) {
+            console.log('end video recieved....');
+
             // event fired when song is finish in one player
             that.numberFinish++;
 
@@ -52,6 +51,12 @@ function init(io, redisClient, coRedisClient, request) {
             function nextSong() {
                 // move to next song
                 co(function *() {
+                    clearTimeout(nextSongTimeout);
+
+                    if(!nextSongTimeout) {
+                        console.log("timeout cleared");
+                    }
+
                     yield *_removeSongFromRedis(coRedisClient, data.song, 'room-00000', co);
 
                     var body = yield *_getVideo(coRedisClient, request);
@@ -66,15 +71,36 @@ function init(io, redisClient, coRedisClient, request) {
                 // TODO replace hardcode room with right one
                 nextSong();
             } else {
-                if(!nextSongTimeout) {
-                    console.log('wait for another end!!')
+                console.log('wait for another end!!');
+                //if(!nextSongTimeout) {
+                    console.log("counting down now!!!");
                     nextSongTimeout = setTimeout(nextSong, 2000);
-                }
+                //}
             }
         });
 
-        socket.on('video songchanged', function(data) {
+        socket.on('video.change.track', function(data) {
             // send notification to all players
+            co(function *() {
+                yield *_removeSongFromRedis(coRedisClient, that.currentSong.song, 'room-00000', co);
+
+                var body = yield *_getVideo(coRedisClient, request);
+
+                var items = _.reduce(body.items, function(acc, video) {
+                    if (video.id === data.videoId) {
+                        return [video].concat(acc);
+                    } else {
+                        return acc.push(video);
+                    }
+                }, []);
+
+                console.log(items);
+
+                body.items = items;
+
+                that.currentSong = {};
+                socket.emit('video changevideo', body);
+            });
         });
 
         socket.on('disconnect', function(){

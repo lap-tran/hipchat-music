@@ -7,6 +7,7 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 var player;
 var timer;
 var currentTrack;
+var currentList;
 
 var socket = io();
 
@@ -45,19 +46,20 @@ function enableLivePlayer(enable) {
 }
 
 function onYouTubeIframeAPIReady() {
-    var items = VIDEO_LIST.items;
-    currentTrack = items.shift();
+    update(VIDEO_LIST.items);
     player = createFirstPlay(currentTrack.id);
 
-    createPlaylist(items);
+    createPlaylist(currentList);
 }
 
 function createPlaylist(items) {
     var tmpItem = $('#queue-item').html();
     var tempArr = [];
+    //console.log(items);
     $.each(items, function(index, value) {
-        var dur = secondsToTime(convert_time(value.contentDetails.duration) * 1000 + '');
+        var dur = secondsToTime(convert_time(value.contentDetails.duration) + '');
         tempArr.push(Mustache.render(tmpItem, {
+            videoId: value.id,
             title: value.snippet.title,
             thumb: value.snippet.thumbnails.default.url,
             duration: dur.m +':'+ dur.s,
@@ -95,6 +97,27 @@ function addListener() {
             player.mute();
         }
     });
+
+    $('.playlist .track-title').click(function(e) {
+        e.preventDefault();
+
+        var videoId = this.dataset.videoId;
+        /*var videoSender = this.dataset.videoSender;
+        var newList = _.reject(currentList, function(item) {
+            return item.id === videoId && item.sender === videoSender;
+        });
+
+        newList.unshift({
+            id: videoId,
+            sender: videoSender
+        });
+
+        update(newList);*/
+
+        socket.emit('video.change.track', {
+            videoId: videoId
+        });
+    });
 }
 
 function onPlayerReady(event) {
@@ -108,15 +131,14 @@ function onPlayerReady(event) {
     if (currentTrack.seekTo) {
         player.seekTo(currentTrack.seekTo);
     }
-    updateClipInfo();
-    addListener();
+
 }
 
 function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.PLAYING) {
-
+        updateClipInfo();
+        addListener();
     } else if (event.data == YT.PlayerState.ENDED) {
-        console.log('end song ====================');
         socket.emit('video.end', {
             song: player.getVideoData().video_id
         });
@@ -209,12 +231,16 @@ function convert_time(duration) {
     return duration
 }
 
-socket.on('video changevideo', function(body){
-    console.log(body);
-    var items = body.items;
-    currentTrack = items.shift();
+function update(list) {
+    currentList = list;
+    currentTrack = currentList.shift();
     player = createFirstPlay(currentTrack.id);
 
-    createPlaylist(items);
+    createPlaylist(currentList);
+}
+
+socket.on('video changevideo', function(body) {
+    //console.log(body);
+    update(body.items);
 });
 

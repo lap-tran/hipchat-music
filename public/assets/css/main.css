@@ -107,5 +107,5 @@ body {
 }
 
 .rotating {
-    -webkit-animation: rotating 3s linear infinite;
+    -webkit-animation: rotating 5s linear infinite;
 }
