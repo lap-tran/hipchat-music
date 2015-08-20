@@ -27,7 +27,7 @@ var coRedis = require("co-redis");
 var redisClient = redis.createClient();
 var coRedisClient = coRedis(redisClient);
 
-var baseUrl = 'http://10f87af7.ngrok.io';
+var baseUrl = 'http://c4c2b4f7.ngrok.io';
 app.use(serve(__dirname + '/public'));
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
@@ -342,8 +342,19 @@ var request = require("co-request");
 
 var server = require('http').createServer(app.callback());
 var io = require('socket.io')(server);
-io.on('connection', function(){
-    console.log('hi theree!');
+
+var currentSong = {
+    
+};
+
+io.on('connection', function(socket){
+    socket.on('register', function(token) {
+        console.log('user has been registed with token ' + token);
+    });
+
+    socket.on('video timechanged', function(data) {
+        console.log(data);
+    });
 });
 
 server.listen(3000);

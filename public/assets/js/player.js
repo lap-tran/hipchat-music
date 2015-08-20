@@ -6,6 +6,11 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 var player;
 var timer;
+
+var socket = io();
+
+socket.emit('register', {token: '1234'});
+
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
         height: '0',
@@ -60,6 +65,12 @@ function updateTimeclasp() {
     var run = function() {
         var current = secondsToTime(player.getCurrentTime());
         $('.playing .timeclasp').text(current.m +':'+ current.s);
+
+        socket.emit('video timechanged', {
+            token: '1234',
+            song: player.getVideoData().video_id,
+            current: player.getCurrentTime()
+        });
     };
 
     timer = setInterval(run, 1000);
