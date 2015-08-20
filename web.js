@@ -16,20 +16,15 @@ app.use(json());
 var send = require('koa-send');
 var serve = require('koa-static');
 
-var baseUrl = require('./lib/app-base-url.js').baseUrl;
-
-// THUAN: Redis
-var redis = require('redis');
-var redisClient = redis.createClient();
-// var redisClient = redis.createClient(port, host);
-
-var baseUrl = 'http://10f87af7.ngrok.io';
-app.use(serve(__dirname + '/public'));
+var baseUrl = 'http://acf1d01e.ngrok.io';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
 // in this example, we can instead create the descriptor using a product-specific
 // builder API
+
+var request = require("co-request");
+
 var addon = app.addon(
 {
   // optional descriptor metas here (taken from package.json when not overridden here)
@@ -174,7 +169,7 @@ app.use(route.get('/glance', function *(next){
   this.body = {
                 "label": {
                   "type": "html",
-                  "value": "<strong>4</strong> tasks"
+                  "value": "<strong>2</strong> tasks"
                 },
                 "status": {
                   "type": "lozenge",
@@ -189,6 +184,25 @@ app.use(route.get('/glance', function *(next){
 app.use(route.get('/page', function *(){
     yield send(this, __dirname + "/templates/index.html");
 }));
+
+app.use(route.get('/search/:query', function *(query){
+    // var apiKey = process.env.YOUTUBE_API_KEY;
+    var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
+
+    var response = yield request.get({
+        url: 'https://www.googleapis.com/youtube/v3/search',
+        qs: {
+            key: apiKey,
+            part: 'snippet',
+            type: 'video',
+            maxResults: 1,
+            q: query,
+            videoCategoryId: 'music' // not sure if this makes results better or worse
+        }
+    });
+    this.body = response.body
+}));
+
 
 app.use(route.get('/template', function *(){
   yield send(this, __dirname + "/templates/index.html");
