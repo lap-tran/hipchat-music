@@ -11,6 +11,8 @@ var app = ack(pkg);
 // THUAN: JSON & Route
 var json = require('koa-json');
 var route = require('koa-route');
+var serve = require('koa-static');
+var send = require('koa-send');
 
 app.use(json());
 
@@ -325,30 +327,18 @@ addon.webhook('room_message', /^\/roomid$/, function *() {
   this.roomClient.sendNotification('your room id is: "' + this.room.id + '"');
 });
 
-app.use(route.get('/template', function *(){
-  yield send(this, __dirname + "/templates/index.html");
+app.use(route.get('/template', function *() {
+    yield send(this, __dirname + "/templates/index.html");
+}));
+
 app.use(route.get('/results', function *() {
     yield send(this, __dirname + '/templates/results.html');
 }));
-
-
 
 app.use(serve(__dirname + '/public'));
 
 var co = require("co");
 var request = require("co-request");
-
-addon.get('/page', addon.authenticate(), function *() {
-    console.log(this.locals.authToken);
-    co(function* () {
-        var result = yield request({
-            uri: "https://api.hipchat.com/v2/room?auth_token=" + this.locals.authToken,
-            method: "GET"
-        });
-
-        console.log("result" + result);
-    });
-});
 
 var server = require('http').createServer(app.callback());
 var io = require('socket.io')(server);
