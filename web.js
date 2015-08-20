@@ -8,21 +8,26 @@ var pkg = require('./package.json');
 // and decorate the app object
 var app = ack(pkg);
 
+// THUAN: JSON & Route
 var json = require('koa-json');
 var route = require('koa-route');
+var serve = require('koa-static');
+var send = require('koa-send');
 
 app.use(json());
 
-var send = require('koa-send');
-var serve = require('koa-static');
+// THUAN: Render template
+var render = require('./lib/render');
 
 var baseUrl = require('./lib/app-base-url.js').baseUrl;
 
+// THUAN: Redis
 var redis = require('redis');
 var coRedis = require("co-redis");
 var redisClient = redis.createClient();
 var coRedisClient = coRedis(redisClient);
 
+var baseUrl = 'http://10f87af7.ngrok.io';
 app.use(serve(__dirname + '/public'));
 
 var views = require('koa-views');
@@ -334,12 +339,23 @@ addon.webhook('room_message', /^\/roomid$/, function *() {
   this.roomClient.sendNotification('your room id is: "' + this.room.id + '"');
 });
 
-app.use(route.get('/template', function *(){
-  yield send(this, __dirname + "/templates/index.html");
+app.use(route.get('/template', function *() {
+    yield send(this, __dirname + "/templates/index.html");
+}));
+
+app.use(route.get('/results', function *() {
+    yield send(this, __dirname + '/templates/results.html');
 }));
 
 app.use(serve(__dirname + '/public'));
 
-// Now that the descriptor has been defined along with a useful webhook handler,
-// start the server 
-app.listen();
+var co = require("co");
+var request = require("co-request");
+
+var server = require('http').createServer(app.callback());
+var io = require('socket.io')(server);
+io.on('connection', function(){
+    console.log('hi theree!');
+});
+
+server.listen(3000);
