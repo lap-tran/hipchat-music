@@ -36,6 +36,8 @@ app.use(views(__dirname + "/templates", {
 }));
 var _ = require('underscore-node');
 
+var baseUrl = 'http://91b4c6d4.ngrok.io';
+
 var hardcodedRoomId = '00000';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
@@ -294,10 +296,8 @@ app.use(route.get('/page', function *(){
 
     var videos = yield * getVideos('00000');
 
-    console.log(videos);
-
     yield this.render('index', {
-      videos: videos
+      videos: JSON.stringify(videos)
     });
 }));
 
@@ -333,7 +333,7 @@ function * getVideos(id) {
             }
         });
     } else {
-        return "No results found.";
+        return {items: {}};
     }
 
         var body = JSON.parse(response.body);
@@ -373,18 +373,11 @@ var co = require("co");
 var server = require('http').createServer(app.callback());
 var io = require('socket.io')(server);
 
-var currentSong = {
+var _ = require('underscore');
 
-};
+var sync = require('./server/sync/sync.js');
+sync.init(io, _);
 
-io.on('connection', function(socket){
-    socket.on('register', function(token) {
-        console.log('user has been registed with token ' + token);
-    });
 
-    socket.on('video timechanged', function(data) {
-        console.log(data);
-    });
-});
 
 server.listen(3000);
