@@ -17,9 +17,12 @@ var send = require('koa-send');
 var serve = require('koa-static');
 
 var redis = require('redis');
+var coRedis = require("co-redis");
 var redisClient = redis.createClient();
+var coRedisClient = coRedis(redisClient);
 
-var baseUrl = 'http://10f87af7.ngrok.io';
+
+var baseUrl = 'http://acf1d01e.ngrok.io';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
@@ -112,7 +115,7 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
       that.roomClient.sendNotification('The song "' + videoId + '" already exsists in the playlist');
     }
   });
-  
+
 });
 
 addon.webhook('room_message', /^\/music\sclear$/, function *() {
@@ -238,16 +241,16 @@ app.use(route.get('/room/:id', function *(id){
 
     var videoIds = null;
 
-    var response = '';
+    var response = {body: ''};
 
-    redisClient.lrange(roomId, 0, -1, function (err, reply) {
-      if (reply != undefined) {
+    var reply = yield coRedisClient.lrange(roomId, 0, -1);
+
+    if (reply != undefined) {
         videoIds = reply.join(',');
         if (videoIds == null || videoIds == undefined) {
           videoIds = '';
         }
-      }
-    });
+    }
 
     if (videoIds !== '') {
           response = yield request.get({
