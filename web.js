@@ -86,17 +86,6 @@ var addon = app.addon(
   // Provide the list of permissions scopes the add-on requires
   .scopes('send_notification');
 
-// Subscribe to the 'room_enter' webhook, and provide an event listener.  Under
-// the covers, this adds a webhook entry to the add-on descriptor, mounts a common
-// webhook endpoint on the Koa app, and brokers webhook POST requests to the event
-// listener as appropriate
-addon.webhook('room_enter', function *() {
-  // 'this' is a Koa context object, containing standard Koa request and response
-  // contextual information as well as hipchat-specific models and services that
-  // make handling the webhook as simple as possible
-  yield this.roomClient.sendNotification('Hi, ' + this.sender.name + '!');
-});
-
 addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
   //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
 
@@ -165,9 +154,9 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
         that.roomClient.sendNotification('Added a song into the playlist: "' + title + '"');
 
         // Get current videos in the room
-        redisClient.lrange(roomId, 0, -1, function(err, reply) {
-          that.roomClient.sendNotification('The playlist is now: "' + reply + '"');
-        });
+        // redisClient.lrange(roomId, 0, -1, function(err, reply) {
+        //   that.roomClient.sendNotification('The playlist is now: "' + reply + '"');
+        // });
       });
     } else {
       that.roomClient.sendNotification('The song "' + title + '" already exsists in the playlist');
