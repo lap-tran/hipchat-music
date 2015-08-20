@@ -154,7 +154,7 @@ app.use(route.get('/template', function *(){
   yield send(this, __dirname + "/templates/index.html");
 }));
 
-
+app.use(serve(__dirname + '/public'));
 
 // Now that the descriptor has been defined along with a useful webhook handler,
 // start the server 
