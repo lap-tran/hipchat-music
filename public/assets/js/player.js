@@ -21,7 +21,6 @@ function onYouTubeIframeAPIReady() {
 }
 
 function createPlaylist(items) {
-    console.log(items);
     var tmpItem = $('#queue-item').html();
     var tempArr = [];
     $.each(items, function(index, value) {
@@ -64,6 +63,10 @@ function addListener() {
 function onPlayerReady(event) {
     event.target.playVideo();
     player.setPlaybackQuality('small');
+
+    if (currentTrack.seekTo) {
+        player.seekTo(currentTrack.seekTo);
+    }
     updateClipInfo();
     addListener();
 }

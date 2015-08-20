@@ -20,7 +20,8 @@ function init(io, redisClient, coRedisClient, co, request) {
         console.log('Now ' + that.numberListeners + " is listening!");
 
         socket.on('register', function(token) {
-            console.log('user has been registed with token ' + token);
+            //console.log('user has been registed with token ' + token);
+
         });
 
         socket.on('video timechanged', function(data) {
@@ -38,7 +39,7 @@ function init(io, redisClient, coRedisClient, co, request) {
                 }
             }
 
-            //console.log(JSON.stringify(that.currentSong));
+            console.log(JSON.stringify(that.currentSong));
         });
 
         var nextSongTimeout;

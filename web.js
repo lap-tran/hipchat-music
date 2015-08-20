@@ -251,9 +251,14 @@ app.use(route.get('/page', function *(){
     // yield send(this, __dirname + "/templates/index.html");
 
     var videos = yield * getVideos('00000');
+    if (videos.items.length) {
+        videos.items[0].seekTo = sync.currentSong.current;
+    }
+
+    console.log(videos);
 
     yield this.render('index', {
-      videos: JSON.stringify(videos)
+        videos: JSON.stringify(videos)
     });
 }));
 
@@ -333,7 +338,5 @@ var _ = require('underscore');
 
 var sync = require('./server/sync/sync.js');
 sync.init(io, redisClient, coRedisClient, request);
-
-
 
 server.listen(3000);
