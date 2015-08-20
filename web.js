@@ -8,7 +8,6 @@ var pkg = require('./package.json');
 // and decorate the app object
 var app = ack(pkg);
 
-// THUAN: JSON & Route
 var json = require('koa-json');
 var route = require('koa-route');
 var serve = require('koa-static');
@@ -27,7 +26,6 @@ var coRedis = require("co-redis");
 var redisClient = redis.createClient();
 var coRedisClient = coRedis(redisClient);
 
-var baseUrl = 'http://c4c2b4f7.ngrok.io';
 app.use(serve(__dirname + '/public'));
 
 var views = require('koa-views');
@@ -36,6 +34,7 @@ app.use(views(__dirname + "/templates", {
     html: 'underscore'
   }
 }));
+var _ = require('underscore-node');
 
 var baseUrl = 'http://91b4c6d4.ngrok.io';
 
@@ -152,12 +151,17 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
     var videoId = id.videoId ? id.videoId : id;
     var title = responseJson.items[0].snippet.title;
 
+    var storedObject = {
+        sender: this.sender.name,
+        videoId: videoId
+    };
+
   // Add video to playlist of the room
   // var roomId = 'room-' + this.room.id;
   var roomId = 'room-' + hardcodedRoomId;
   redisClient.lrange(roomId, 0, -1, function(err, reply) {
     if (reply.indexOf(videoId) < 0) {
-      redisClient.rpush([roomId, videoId], function (err, reply) {
+      redisClient.rpush([roomId, JSON.stringify(storedObject)], function (err, reply) {
         that.roomClient.sendNotification('Added a song into the playlist: "' + title + '"');
 
         // Get current videos in the room
@@ -169,7 +173,6 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
       that.roomClient.sendNotification('The song "' + title + '" already exsists in the playlist');
     }
   });
-
 });
 
 addon.webhook('room_message', /^\/music\sclear$/, function *() {
@@ -317,40 +320,51 @@ function * getVideos(id) {
     // var apiKey = process.env.YOUTUBE_API_KEY;
     var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
 
-    var videoIds = null;
+    var videoIds = '';
+    var response;
 
-    var response = {body: ''};
+    var storedSongs = yield coRedisClient.lrange(roomId, 0, -1);
+    storedSongs = _.map(storedSongs, function (string) {
+        return JSON.parse(string);
+    });
 
-    var reply = yield coRedisClient.lrange(roomId, 0, -1);
-
-    if (reply != undefined) {
-        videoIds = reply.join(',');
-        if (videoIds == null || videoIds == undefined) {
-          videoIds = '';
-        }
+    if (typeof storedSongs === "object") {
+        videoIds = _.pluck(storedSongs, 'videoId').join(',');
     }
 
     if (videoIds !== '') {
-          response = yield request.get({
-              url: 'https://www.googleapis.com/youtube/v3/videos',
-              qs: {
-                  key: apiKey,
-                  part: 'contentDetails,snippet',
-                  type: 'video',
-                  id: videoIds,
-                  fields: 'items(id,snippet(title,thumbnails(default)),contentDetails(duration))',
-                  videoCategoryId: 'music' // not sure if this makes results better or worse
-              }
-          });
-        }
+        response = yield request.get({
+            url: 'https://www.googleapis.com/youtube/v3/videos',
+            qs: {
+                key: apiKey,
+                part: 'contentDetails,snippet',
+                type: 'video',
+                id: videoIds,
+                fields: 'items(id,snippet(title,thumbnails(default)),contentDetails(duration))',
+                videoCategoryId: 'music' // not sure if this makes results better or worse
+            }
+        });
+    } else {
+        return "No results found.";
+    }
 
-        return response.body;
+        var body = JSON.parse(response.body);
+
+        body.items = _.map(body.items, function(tubeSong) {
+            var matchingStoredSong = _.find(storedSongs, function(stored) {
+                return stored.videoId = tubeSong.id;
+            });
+            if (matchingStoredSong) {
+                tubeSong.sender = matchingStoredSong.sender;
+            }
+            return tubeSong
+        });
+
+        return body;
 }
 
 app.use(route.get('/room/:id', function *(id){
-    var videosJson = yield* getVideos(id);
-
-    this.body = videosJson;
+    this.body = yield* getVideos(id);
 }));
 
 addon.webhook('room_message', /^\/roomid$/, function *() {
@@ -368,8 +382,6 @@ app.use(route.get('/results', function *() {
 app.use(serve(__dirname + '/public'));
 
 var co = require("co");
-var request = require("co-request");
-
 var server = require('http').createServer(app.callback());
 var io = require('socket.io')(server);
 
