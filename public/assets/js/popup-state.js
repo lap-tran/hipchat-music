@@ -25,7 +25,7 @@ var PopupState = (function() {
     }
     
     return {
-        register: register,
-        track: track
+        registerOpen: registerOpen,
+        trackClose: trackClose
     };
 })();

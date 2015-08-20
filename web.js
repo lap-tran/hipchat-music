@@ -16,14 +16,15 @@ app.use(json());
 var send = require('koa-send');
 var serve = require('koa-static');
 
-var baseUrl = 'http://91b4c6d4.ngrok.io';
-
-app.use(serve(__dirname + '/public'));
+var baseUrl = 'http://acf1d01e.ngrok.io';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
 // in this example, we can instead create the descriptor using a product-specific
 // builder API
+
+var request = require("co-request");
+
 var addon = app.addon(
 {
   // optional descriptor metas here (taken from package.json when not overridden here)
@@ -73,15 +74,48 @@ addon.webhook('room_enter', function *() {
   yield this.roomClient.sendNotification('Hi, ' + this.sender.name + '!');
 });
 
-addon.webhook('room_message', /^\/hello$/, function *() {
-  yield this.roomClient.sendNotification('Hi, ' + this.sender.name + '!');
+addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
+  //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
+
+  var that = this;
+
+  // Get videoId
+  var msg = this.message.message;
+  var videoId = msg.substring(11); // default "/music add videoId"
+  var vIndex = videoId.indexOf("v=");
+  if (vIndex >= 0) {
+    var andIndex = videoId.indexOf("&", vIndex);
+    if (andIndex <= 0) {
+      videoId = videoId.substring(vIndex + 2);
+    } else {
+      videoId = videoId.substring(vIndex + 2, andIndex);
+    }
+  }
+
+  // Add video to playlist of the room
+  var roomId = this.room.id;
+  redisClient.lrange('room-' + roomId, 0, -1, function(err, reply) {
+    if (reply.indexOf(videoId) < 0) {
+      redisClient.rpush(['room-' + roomId, videoId], function (err, reply) {
+        that.roomClient.sendNotification('Added youtude id into the playlist: "' + videoId + '"');
+
+        // Get current videos in the room
+        redisClient.lrange('room-' + roomId, 0, -1, function(err, reply) {
+          that.roomClient.sendNotification('The playlist are now: "' + reply + '"');
+        });
+      });
+    } else {
+      that.roomClient.sendNotification('The song "' + videoId + '" already exsists in the playlist');
+    }
+  });
+  
 });
 
 app.use(route.get('/glance', function *(next){
   this.body = {
                 "label": {
                   "type": "html",
-                  "value": "<strong>4</strong> tasks"
+                  "value": "<strong>2</strong> tasks"
                 },
                 "status": {
                   "type": "lozenge",
@@ -96,6 +130,25 @@ app.use(route.get('/glance', function *(next){
 app.use(route.get('/page', function *(){
     yield send(this, __dirname + "/templates/index.html");
 }));
+
+app.use(route.get('/search/:query', function *(query){
+    // var apiKey = process.env.YOUTUBE_API_KEY;
+    var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
+
+    var response = yield request.get({
+        url: 'https://www.googleapis.com/youtube/v3/search',
+        qs: {
+            key: apiKey,
+            part: 'snippet',
+            type: 'video',
+            maxResults: 1,
+            q: query,
+            videoCategoryId: 'music' // not sure if this makes results better or worse
+        }
+    });
+    this.body = response.body
+}));
+
 
 app.use(route.get('/template', function *(){
   yield send(this, __dirname + "/templates/index.html");
