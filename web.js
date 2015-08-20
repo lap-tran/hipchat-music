@@ -116,8 +116,6 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
   
 });
 
-app.use(serve('./public'));
-
 app.use(route.get('/glance', function *(next){
   this.body = {
                 "label": {
