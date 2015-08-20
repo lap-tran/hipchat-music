@@ -3,99 +3,43 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Hipchat Music</title>
-    <link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet">
+    <link rel="stylesheet" href="//aui-cdn.atlassian.com/aui-adg/5.8.14/css/aui.css" media="all">
+    <link href="/assets/css/main.css" rel="stylesheet">
 </head>
 <body>
-    <div id="app"></div>
+    <div class="container">
+        <div class="group">
+            <h6 class="group-title">Now Playing</h6>
+            <div class="group-content">
+                <div class="box">
+                    Nguyen Hong Phong
+                </div>
+            </div>
+        </div>
 
-    <video id="vid1" src="" class="video-js vjs-default-skin" controls preload="auto" width="640" height="360" data-setup='{ "techOrder": ["youtube"], "src": "https://www.youtube.com/watch?v=nfWlot6h_JM" }'>
-    </video>
-
-    <script src="http://fb.me/react-0.11.1.js"></script>
-    <script src="http://fb.me/JSXTransformer-0.11.1.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="http://vjs.zencdn.net/4.12/video.js"></script>
-    <script src="assets/dependencies/videojs-youtube/src/youtube.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bacon.js/0.7.71/Bacon.js"></script>
-
-    <script type="text/jsx">
-        /** @jsx React.DOM */
-
-        var MessageBox = React.createClass({
-
-            getInitialState: function() {
-                return {
-                    isVisible: true,
-                    messages: [
-                        "Hello, World",
-                        " Hi there,",
-                        " Good Bye"
-                    ]
-                }
-            },
-            render: function() {
-                var inlineStyle = {
-                    display: this.state.isVisible ? 'block' : 'none'
-                };
-
-                var messages = this.state.messages.map(function(message) {
-                    return <SubMessage message={message} />
-                });
-
-                return (
-                       <div className="container" style={inlineStyle}>
-                           <h1>{this.props.titleMessage}</h1>
-                           { messages }
-                       </div>
-                );
-            }
-        });
-
-        var SubMessage = React.createClass({
-
-            propTypes: {
-                message: React.PropTypes.string.isRequired
-            },
-
-            getDefaultProps: function() {
-                return {
-                    message: 'Its good to see you'
-                }
-            },
-            render: function() {
-                return (
-                    <small>{this.props.message}</small>
-                );
-            }
-        });
-
-        var message = 'Yo';
-
-        var reactComponent = React.renderComponent(
-                <MessageBox titleMessage={message}/>,
-                document.getElementById('app')
-        );
-
-        var socket = io();
-
-        var player = videojs('vid1', {}, function() {
-            Bacon.fromEvent(this, 'play').onValue(function(e) {
-                socket.emit('video play', {});
-            });
-
-            Bacon.fromEvent(this, 'pause').onValue(function(e) {
-                socket.emit('video pause', {});
-            });
-        });
-
-        Bacon.fromEvent(socket, 'video play').onValue(function(e) {
-            player.play();
-        });
-
-        Bacon.fromEvent(socket, 'video pause').onValue(function(e) {
-            player.pause();
-        });
-
-    </script>
+        <div class="group">
+            <h6 class="group-title">Upcoming Songs</h6>
+            <div class="group-content">
+                <div class="box">
+                    <img class="img" src="http://placehold.it/65x65" />
+                    <div class="content">
+                        phong
+                    </div>
+                </div>
+                <div class="box">
+                    <img class="img" src="http://placehold.it/65x65" />
+                    <div class="content">
+                        phong
+                    </div>
+                </div>
+                <div class="box">
+                    <img class="img" src="http://placehold.it/65x65" />
+                    <div class="content">
+                        phong
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

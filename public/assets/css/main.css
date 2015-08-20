@@ -1,0 +1,43 @@
+body {
+    margin: 10px;
+}
+
+.container {
+
+}
+
+.group {
+    margin-bottom: 15px;
+}
+
+.group:last-child {
+    margin-bottom: 0;
+}
+
+.group-title {
+    text-transform: uppercase;
+    padding-bottom: 5px;
+}
+
+.group-content {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.box {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.box:last-child {
+    border-bottom: none;
+}
+
+.box .img {
+
+}
+
+.box .content {
+
+}

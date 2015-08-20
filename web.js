@@ -8,20 +8,27 @@ var pkg = require('./package.json');
 // and decorate the app object
 var app = ack(pkg);
 
-// THUAN: JSON & Route
 var json = require('koa-json');
 var route = require('koa-route');
+var serve = require('koa-static-folder');
+
 app.use(json());
 
-// THUAN: Render template
 var send = require('koa-send');
+var serve = require('koa-static');
 
+var baseUrl = require('./lib/app-base-url.js').baseUrl;
+
+<<<<<<< HEAD
 // THUAN: Redis
 var redis = require('redis');
 var redisClient = redis.createClient();
 // var redisClient = redis.createClient(port, host);
 
 var baseUrl = 'http://10f87af7.ngrok.io';
+=======
+app.use(serve(__dirname + '/public'));
+>>>>>>> 489650cfc3e40d3abe5f927dd0e3f1b04232003c
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
@@ -113,6 +120,8 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
   
 });
 
+app.use(serve('./public'));
+
 app.use(route.get('/glance', function *(next){
   this.body = {
                 "label": {
@@ -130,14 +139,14 @@ app.use(route.get('/glance', function *(next){
 }));
 
 app.use(route.get('/page', function *(){
-    // this.body = '<html><head><script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script></head>'
-    //   + '<body>This is <b>my page</b> </br> This is line 2.<br/><div id="xxx" /><script> var counter = 1; setInterval(function() {$("#xxx").html(counter++);}, 1000);</script></body></html>';
-    this.body = '<iframe width="300" src="https://www.youtube.com/embed/JjDcrUsM7AE" frameborder="0" allowfullscreen></iframe>';
+    yield send(this, __dirname + "/templates/index.html");
 }));
 
 app.use(route.get('/template', function *(){
   yield send(this, __dirname + "/templates/index.html");
 }));
+
+
 
 // Now that the descriptor has been defined along with a useful webhook handler,
 // start the server 
