@@ -16,7 +16,10 @@ app.use(json());
 var send = require('koa-send');
 var serve = require('koa-static');
 
-var baseUrl = 'http://acf1d01e.ngrok.io';
+var redis = require('redis');
+var redisClient = redis.createClient();
+
+var baseUrl = 'http://10f87af7.ngrok.io';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
