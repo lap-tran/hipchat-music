@@ -260,6 +260,7 @@ app.use(route.get('/room/:id', function *(id){
                   part: 'snippet',
                   type: 'video',
                   id: videoIds,
+                  fields: 'items(id,snippet(title,thumbnails(default)))',
                   videoCategoryId: 'music' // not sure if this makes results better or worse
               }
           });
