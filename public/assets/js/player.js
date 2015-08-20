@@ -12,6 +12,38 @@ var socket = io();
 
 socket.emit('register', {token: '1234'});
 
+var isLivePlayer = window.location.href.indexOf("livePlayerId=") != -1;
+if (isLivePlayer) {
+    PopupState.registerOpen("livePlayer");
+} else if (PopupState.isOpen("livePlayer")) {
+    enableLivePlayer(false);
+    PopupState.trackClose("livePlayer").done(function() {
+        enableLivePlayer(true);
+        player && player.unMute();
+    });
+}
+
+$(".live-player").click(function() {
+    window.open("/page?livePlayerId=1234", "livePlayer", "'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=420, height=600");
+    enableLivePlayer(false);
+    player && player.mute();
+    setTimeout(function() {
+        PopupState.trackClose("livePlayer").done(function() {
+            enableLivePlayer(true);
+            player && player.unMute();
+        });
+    }, 5000);
+
+});
+
+function enableLivePlayer(enable) {
+    if (enable) {
+        $(".group-content .controls").parent().parent().show();
+    } else {
+        $(".group-content .controls").parent().parent().hide();
+    }
+}
+
 function onYouTubeIframeAPIReady() {
     var items = VIDEO_LIST.items;
     currentTrack = items.shift();
@@ -69,6 +101,10 @@ function onPlayerReady(event) {
     event.target.playVideo();
     player.setPlaybackQuality('small');
 
+    if (!$(".group-content .controls").is(":visible")) {
+        player.mute();
+    }
+    
     if (currentTrack.seekTo) {
         player.seekTo(currentTrack.seekTo);
     }
