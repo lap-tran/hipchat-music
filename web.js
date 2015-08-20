@@ -96,14 +96,14 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
   }
 
   // Add video to playlist of the room
-  var roomId = this.room.id;
-  redisClient.lrange('room-' + roomId, 0, -1, function(err, reply) {
+  var roomId = 'room-' + this.room.id;
+  redisClient.lrange(roomId, 0, -1, function(err, reply) {
     if (reply.indexOf(videoId) < 0) {
-      redisClient.rpush(['room-' + roomId, videoId], function (err, reply) {
+      redisClient.rpush([roomId, videoId], function (err, reply) {
         that.roomClient.sendNotification('Added youtude id into the playlist: "' + videoId + '"');
 
         // Get current videos in the room
-        redisClient.lrange('room-' + roomId, 0, -1, function(err, reply) {
+        redisClient.lrange(roomId, 0, -1, function(err, reply) {
           that.roomClient.sendNotification('The playlist are now: "' + reply + '"');
         });
       });
@@ -206,6 +206,43 @@ app.use(route.get('/search/:query', function *(query){
     this.body = response.body
 }));
 
+app.use(route.get('/room/:id', function *(id){
+    var roomId = 'room-' + id;
+    // var apiKey = process.env.YOUTUBE_API_KEY;
+    var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
+
+    var videoIds = null;
+
+    var response = '';
+
+    redisClient.lrange(roomId, 0, -1, function (err, reply) {
+      if (reply != undefined) {
+        videoIds = reply.join(',');
+        if (videoIds == null || videoIds == undefined) {
+          videoIds = '';
+        }
+      }
+    });
+
+    if (videoIds !== '') {
+          response = yield request.get({
+              url: 'https://www.googleapis.com/youtube/v3/videos',
+              qs: {
+                  key: apiKey,
+                  part: 'snippet',
+                  type: 'video',
+                  id: videoIds,
+                  videoCategoryId: 'music' // not sure if this makes results better or worse
+              }
+          });
+        }
+
+    this.body = response.body;
+}));
+
+addon.webhook('room_message', /^\/roomid$/, function *() {
+  this.roomClient.sendNotification('your room id is: "' + this.room.id + '"');
+});
 
 app.use(route.get('/template', function *(){
   yield send(this, __dirname + "/templates/index.html");
