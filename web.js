@@ -37,7 +37,7 @@ app.use(views(__dirname + "/templates", {
   }
 }));
 
-var baseUrl = 'http://a95c4e51.ngrok.io';
+var baseUrl = 'http://91b4c6d4.ngrok.io';
 
 var hardcodedRoomId = '00000';
 
@@ -305,10 +305,8 @@ app.use(route.get('/page', function *(){
 
     var videos = yield * getVideos('00000');
 
-    console.log(videos);
-
     yield this.render('index', {
-      videos: JSON.parse(videos)
+      videos: videos
     });
 }));
 
