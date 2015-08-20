@@ -6,23 +6,47 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 var player;
 var timer;
+var currentTrack;
 
 var socket = io();
 
 socket.emit('register', {token: '1234'});
 
 function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
+    var items = VIDEO_LIST.items;
+    currentTrack = items.shift();
+    player = createFirstPlay(currentTrack.id);
+
+    createPlaylist(items);
+}
+
+function createPlaylist(items) {
+    console.log(items);
+    var tmpItem = $('#queue-item').html();
+    var tempArr = [];
+    $.each(items, function(index, value) {
+        var dur = secondsToTime(convert_time(value.contentDetails.duration) * 1000 + '');
+        tempArr.push(Mustache.render(tmpItem, {
+            title: value.snippet.title,
+            thumb: value.snippet.thumbnails.default.url,
+            duration: dur.m +':'+ dur.s,
+            sender: value.sender
+        }));
+    });
+
+    $('.playlist .group-content').html(tempArr.join(' '));
+}
+
+function createFirstPlay(videoId) {
+    return new YT.Player('player', {
         height: '0',
         width: '0',
-        videoId: '-aEhUyrkDto',
+        videoId: videoId,
         events: {
             'onReady': onPlayerReady,
             'onStateChange': onPlayerStateChange
         }
     });
-
-    addListener();
 }
 
 function addListener() {
@@ -41,6 +65,7 @@ function onPlayerReady(event) {
     event.target.playVideo();
     player.setPlaybackQuality('small');
     updateClipInfo();
+    addListener();
 }
 
 function onPlayerStateChange(event) {
@@ -61,6 +86,7 @@ function updateClipInfo() {
     var data = player.getVideoData();
     $('.playing .box-title').text(data.title);
     $('.playing .img').attr('src', '//img.youtube.com/vi/'+ data.video_id +'/0.jpg');
+    $('.playing .sender').text(currentTrack.sender);
 }
 
 function updateTimeclasp() {
@@ -102,6 +128,36 @@ function secondsToTime(secs)
     return obj;
 }
 
-function mute() {
+function convert_time(duration) {
+    var a = duration.match(/\d+/g);
 
+    if (duration.indexOf('M') >= 0 && duration.indexOf('H') == -1 && duration.indexOf('S') == -1) {
+        a = [0, a[0], 0];
+    }
+
+    if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1) {
+        a = [a[0], 0, a[1]];
+    }
+    if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1 && duration.indexOf('S') == -1) {
+        a = [a[0], 0, 0];
+    }
+
+    duration = 0;
+
+    if (a.length == 3) {
+        duration = duration + parseInt(a[0]) * 3600;
+        duration = duration + parseInt(a[1]) * 60;
+        duration = duration + parseInt(a[2]);
+    }
+
+    if (a.length == 2) {
+        duration = duration + parseInt(a[0]) * 60;
+        duration = duration + parseInt(a[1]);
+    }
+
+    if (a.length == 1) {
+        duration = duration + parseInt(a[0]);
+    }
+    return duration
 }
+
