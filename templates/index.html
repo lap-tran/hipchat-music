@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Hipchat Music</title>
     <link rel="stylesheet" href="//aui-cdn.atlassian.com/aui-adg/5.8.14/css/aui.css" media="all">
+    <link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet">
     <link href="/assets/css/main.css" rel="stylesheet">
 </head>
 <body>
@@ -11,8 +12,22 @@
         <div class="group">
             <h6 class="group-title">Now Playing</h6>
             <div class="group-content">
-                <div class="box">
-                    Nguyen Hong Phong
+                <div class="box round playing">
+                    <img class="aui-avatar aui-avatar-project col img rotating" src="http://placehold.it/64x64" />
+                    <div class="col content">
+                        <h6 class="box-title">Loading...</h6>
+                        <ul class="box-attribute-list">
+                            <li class="box-attribute-item">
+                                <span class="aui-icon aui-icon-small aui-iconfont-time"></span>
+                                <span class="timeclasp">0:0</span> /
+                                <span class="duration">0:0</span>
+                            </li>
+                            <li class="box-attribute-item">
+                                <span class="aui-icon aui-icon-small aui-iconfont-space-personal"></span>
+                                Spenser Norrish
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -20,26 +35,105 @@
         <div class="group">
             <h6 class="group-title">Upcoming Songs</h6>
             <div class="group-content">
-                <div class="box">
-                    <img class="img" src="http://placehold.it/65x65" />
-                    <div class="content">
-                        phong
+                <div class="box box-2">
+                    <img class="aui-avatar aui-avatar-project col img" src="http://placehold.it/64x64" />
+                    <div class="col content">
+                        <h6 class="box-title">Maroon 5 - Surgar</h6>
+                        <ul class="box-attribute-list inline">
+                            <li class="box-attribute-item">
+                                <span class="aui-icon aui-icon-small aui-iconfont-time"></span>
+                                3:50
+                            </li>
+                            <li class="box-attribute-item">
+                                <span class="aui-icon aui-icon-small aui-iconfont-space-personal"></span>
+                                Spenser Norrish
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="box box-2">
+                    <img class="aui-avatar aui-avatar-project col img" src="http://placehold.it/64x64" />
+                    <div class="col content">
+                        <h6 class="box-title">Maroon 5 - Surgar</h6>
+                        <ul class="box-attribute-list inline">
+                            <li class="box-attribute-item">
+                                <span class="aui-icon aui-icon-small aui-iconfont-time"></span>
+                                3:50
+                            </li>
+                            <li class="box-attribute-item">
+                                <span class="aui-icon aui-icon-small aui-iconfont-space-personal"></span>
+                                Spenser Norrish
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="box box-2">
+                    <img class="aui-avatar aui-avatar-project col img" src="http://placehold.it/64x64" />
+                    <div class="col content">
+                        <h6 class="box-title">Maroon 5 - Surgar</h6>
+                        <ul class="box-attribute-list">
+                            <li class="box-attribute-item">
+                                <span class="aui-icon aui-icon-small aui-iconfont-time"></span>
+                                3:50
+                            </li>
+                            <li class="box-attribute-item">
+                                <span class="aui-icon aui-icon-small aui-iconfont-space-personal"></span>
+                                Spenser Norrish
+                            </li>
+                        </ul>
                     </div>
                 </div>
                 <div class="box">
-                    <img class="img" src="http://placehold.it/65x65" />
-                    <div class="content">
-                        phong
-                    </div>
+                    <p>Type /add <song name> to add more</p>
                 </div>
-                <div class="box">
-                    <img class="img" src="http://placehold.it/65x65" />
-                    <div class="content">
-                        phong
+            </div>
+        </div>
+
+        <div class="group">
+            <div class="group-content">
+                <div class="controls round">
+                    <div class="aui-buttons">
+                        <button class="aui-button mute"><span class="aui-icon aui-icon-small aui-iconfont-file-wav">Listen Outside Room </span> Mute</button>
+                        <button class="aui-button"><span class="aui-icon aui-icon-small aui-iconfont-share">Listen Outside Room </span> Listen Outside Room</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div id="player"></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="assets/js/player.js"></script>
+    <!--<script>
+        // 2. This code loads the IFrame Player API code asynchronously.
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // 3. This function creates an <iframe> (and YouTube player)
+        //    after the API code downloads.
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '0',
+                width: '0',
+                videoId: 'nfWlot6h_JM',
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        // 4. The API will call this function when the video player is ready.
+        function onPlayerReady(event) {
+            event.target.playVideo();
+        }
+
+        function stopVideo() {
+            player.stopVideo();
+        }
+    </script>-->
 </body>
 </html>
