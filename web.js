@@ -11,6 +11,8 @@ var app = ack(pkg);
 // THUAN: JSON & Route
 var json = require('koa-json');
 var route = require('koa-route');
+var serve = require('koa-static-folder');
+
 app.use(json());
 
 // THUAN: Render template
@@ -74,6 +76,8 @@ addon.webhook('room_enter', function *() {
 addon.webhook('room_message', /^\/hello$/, function *() {
   yield this.roomClient.sendNotification('Hi, ' + this.sender.name + '!');
 });
+
+app.use(serve('./public'));
 
 app.use(route.get('/glance', function *(next){
   this.body = {
