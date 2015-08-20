@@ -16,6 +16,20 @@ function onYouTubeIframeAPIReady() {
             'onStateChange': onPlayerStateChange
         }
     });
+
+    addListener();
+}
+
+function addListener() {
+    $('.controls .mute').click(function() {
+        if (player.isMuted()) {
+            $(this).attr('aria-pressed', false);
+            player.unMute()
+        } else {
+            $(this).attr('aria-pressed', true);
+            player.mute();
+        }
+    });
 }
 
 function onPlayerReady(event) {
@@ -73,4 +87,8 @@ function secondsToTime(secs)
         "s": (seconds + '').length <= 1 ? '0' + seconds : seconds
     };
     return obj;
+}
+
+function mute() {
+
 }
