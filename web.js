@@ -8,15 +8,15 @@ var pkg = require('./package.json');
 // and decorate the app object
 var app = ack(pkg);
 
+// THUAN: JSON & Route
 var json = require('koa-json');
 var route = require('koa-route');
-
 app.use(json());
 
-var send = require('koa-send');
-var serve = require('koa-static');
+// THUAN: Render template
+var render = require('./lib/render');
 
-var baseUrl = require('./lib/app-base-url.js').baseUrl;
+var baseUrl = 'http://c4c2b4f7.ngrok.io';
 
 // THUAN: Redis
 var redis = require('redis');
@@ -132,16 +132,45 @@ app.use(route.get('/glance', function *(next){
               };
 }));
 
-app.use(route.get('/page', function *(){
-    yield send(this, __dirname + "/templates/index.html");
+//app.use(route.get('/page', function *(){
+//    // this.body = '<html><head><script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script></head>'
+//    //   + '<body>This is <b>my page</b> </br> This is line 2.<br/><div id="xxx" /><script> var counter = 1; setInterval(function() {$("#xxx").html(counter++);}, 1000);</script></body></html>';
+//    this.body = '<iframe width="300" src="https://www.youtube.com/embed/JjDcrUsM7AE" frameborder="0" allowfullscreen></iframe>';
+//
+//    console.log(this.locals)
+//}));
+
+app.use(route.get('/index', function *(){
+    yield send(this, __dirname + '/templates/index.html');
 }));
 
-app.use(route.get('/template', function *(){
-  yield send(this, __dirname + "/templates/index.html");
+app.use(route.get('/results', function *() {
+    yield send(this, __dirname + '/templates/results.html');
 }));
 
 
 
-// Now that the descriptor has been defined along with a useful webhook handler,
-// start the server 
-app.listen();
+app.use(serve(__dirname + '/public'));
+
+var co = require("co");
+var request = require("co-request");
+
+addon.get('/page', addon.authenticate(), function *() {
+    console.log(this.locals.authToken);
+    co(function* () {
+        var result = yield request({
+            uri: "https://api.hipchat.com/v2/room?auth_token=" + this.locals.authToken,
+            method: "GET"
+        });
+
+        console.log("result" + result);
+    });
+});
+
+var server = require('http').createServer(app.callback());
+var io = require('socket.io')(server);
+io.on('connection', function(){
+    console.log('hi theree!');
+});
+
+server.listen(3000);
