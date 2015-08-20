@@ -36,7 +36,7 @@ app.use(views(__dirname + "/templates", {
 }));
 var _ = require('underscore-node');
 
-var baseUrl = 'http://91b4c6d4.ngrok.io';
+var baseUrl = pkg.development.localBaseUrl;
 
 var hardcodedRoomId = '00000';
 
