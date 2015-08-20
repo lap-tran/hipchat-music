@@ -18,7 +18,7 @@ app.use(json());
 // THUAN: Render template
 var render = require('./lib/render');
 
-var baseUrl = require('./lib/app-base-url.js').baseUrl;
+//var baseUrl = require('./lib/app-base-url.js').baseUrl;
 
 // THUAN: Redis
 var redis = require('redis');
@@ -36,7 +36,7 @@ app.use(views(__dirname + "/templates", {
 }));
 var _ = require('underscore-node');
 
-var baseUrl = 'http://91b4c6d4.ngrok.io';
+var baseUrl = pkg.development.localBaseUrl;
 
 var hardcodedRoomId = '00000';
 
@@ -254,8 +254,6 @@ app.use(route.get('/page', function *(){
     if (videos.items.length && sync.currentSong) {
         videos.items[0].seekTo = sync.currentSong.current;
     }
-
-    console.log(videos);
 
     yield this.render('index', {
         videos: JSON.stringify(videos)
