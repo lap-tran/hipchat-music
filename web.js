@@ -216,7 +216,8 @@ addon.webhook('room_message', /^\/music\sremove\s.*$/, function *() {
       });
     }
   });
-  
+
+
 });
 
 addon.webhook('room_message', /^\/music\sclear$/, function *() {
@@ -376,7 +377,7 @@ var io = require('socket.io')(server);
 var _ = require('underscore');
 
 var sync = require('./server/sync/sync.js');
-sync.init(io, _);
+sync.init(io, redisClient, coRedisClient, request);
 
 
 

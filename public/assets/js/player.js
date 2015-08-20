@@ -70,8 +70,11 @@ function onPlayerReady(event) {
 
 function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.PLAYING) {
-        // Here we can start next one
-        console.log(player.getCurrentTime());
+
+    } else if (event.data == YT.PlayerState.ENDED) {
+        socket.emit('video.end', {
+            song: player.getVideoData().video_id
+        });
     }
 }
 
