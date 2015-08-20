@@ -18,6 +18,9 @@ function init(io, redisClient, coRedisClient, request) {
 
     io.on('connection', function(socket) {
         that.numberListeners++;
+        that.socket = socket;
+
+        console.log(socket.id);
 
         console.log('Now ' + that.numberListeners + " is listening!");
 

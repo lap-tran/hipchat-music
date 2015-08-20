@@ -47,7 +47,8 @@ function enableControls(enable) {
 }
 
 function onYouTubeIframeAPIReady() {
-    update(VIDEO_LIST.items);
+    update(VIDEO_LIST.items, true);
+    
     player = createFirstPlay(currentTrack.id);
 
     createPlaylist(currentList);
@@ -234,16 +235,25 @@ function convert_time(duration) {
     return duration
 }
 
-function update(list) {
+function update(list, isChangeTrack) {
     currentList = list;
-    currentTrack = currentList.shift();
-    player = createFirstPlay(currentTrack.id);
+
+    if(isChangeTrack) {
+        currentTrack = currentList.shift();
+        player = createFirstPlay(currentTrack.id);
+    }
 
     createPlaylist(currentList);
 }
 
 socket.on('video changevideo', function(body) {
-    //console.log(body);
-    update(body.items);
+    console.log(body);
+
+    update(body.items, true);
 });
 
+socket.on('video changeplaylist', function(body) {
+    console.log(body);
+
+    update(body.items, false);
+});
