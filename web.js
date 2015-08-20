@@ -173,18 +173,6 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
   });
 });
 
-addon.webhook('room_message', /^\/music\sclear$/, function *() {
-  //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
-
-  var that = this;
-
-  // var roomId = 'room-' + this.room.id;
-  var roomId = 'room-' + hardcodedRoomId;
-  redisClient.del(roomId, function(err, reply) {
-    that.roomClient.sendNotification('The playlist are now cleared');
-  });
-});
-
 addon.webhook('room_message', /^\/music\sremove\s.*$/, function *() {
   //https://www.youtube.com/watch?v=501mKjtUe7c&list=PLGnM8QCiRtpCyYBKSk3XANInqhr6dJPEt&index=2
 
