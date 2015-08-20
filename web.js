@@ -8,7 +8,6 @@ var pkg = require('./package.json');
 // and decorate the app object
 var app = ack(pkg);
 
-// THUAN: JSON & Route
 var json = require('koa-json');
 var route = require('koa-route');
 var serve = require('koa-static');
@@ -27,7 +26,6 @@ var coRedis = require("co-redis");
 var redisClient = redis.createClient();
 var coRedisClient = coRedis(redisClient);
 
-var baseUrl = 'http://c4c2b4f7.ngrok.io';
 app.use(serve(__dirname + '/public'));
 
 var views = require('koa-views');
@@ -36,8 +34,7 @@ app.use(views(__dirname + "/templates", {
     html: 'underscore'
   }
 }));
-
-var baseUrl = 'http://a95c4e51.ngrok.io';
+var _ = require('underscore-node');
 
 var hardcodedRoomId = '00000';
 
@@ -152,12 +149,17 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
     var videoId = id.videoId ? id.videoId : id;
     var title = responseJson.items[0].snippet.title;
 
+    var storedObject = {
+        sender: this.sender.name,
+        videoId: videoId
+    };
+
   // Add video to playlist of the room
   // var roomId = 'room-' + this.room.id;
   var roomId = 'room-' + hardcodedRoomId;
   redisClient.lrange(roomId, 0, -1, function(err, reply) {
     if (reply.indexOf(videoId) < 0) {
-      redisClient.rpush([roomId, videoId], function (err, reply) {
+      redisClient.rpush([roomId, JSON.stringify(storedObject)], function (err, reply) {
         that.roomClient.sendNotification('Added a song into the playlist: "' + title + '"');
 
         // Get current videos in the room
@@ -169,7 +171,6 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
       that.roomClient.sendNotification('The song "' + title + '" already exsists in the playlist');
     }
   });
-
 });
 
 addon.webhook('room_message', /^\/music\sclear$/, function *() {
@@ -308,7 +309,7 @@ app.use(route.get('/page', function *(){
     console.log(videos);
 
     yield this.render('index', {
-      videos: JSON.parse(videos)
+      videos: videos
     });
 }));
 
@@ -324,9 +325,12 @@ function * getVideos(id) {
     var response = {body: ''};
 
     var reply = yield coRedisClient.lrange(roomId, 0, -1);
+    reply = _.map(reply, function (string) {
+        return JSON.parse(string);
+    });
 
     if (reply != undefined) {
-        videoIds = reply.join(',');
+        videoIds = _.pluck(reply, 'videoId').join(',');
         if (videoIds == null || videoIds == undefined) {
           videoIds = '';
         }
@@ -346,13 +350,23 @@ function * getVideos(id) {
           });
         }
 
-        return response.body;
+        var body = JSON.parse(response.body);
+
+        body.items = _.map(body.items, function(tubeSong) {
+            var storedSong = _.find(reply, function(song) {
+                return song.videoId = tubeSong.id;
+            });
+            if (storedSong) {
+                tubeSong.sender = storedSong.sender;
+            }
+            return tubeSong
+        });
+
+        return body;
 }
 
 app.use(route.get('/room/:id', function *(id){
-    var videosJson = yield* getVideos(id);
-
-    this.body = videosJson;
+    this.body = yield* getVideos(id);
 }));
 
 addon.webhook('room_message', /^\/roomid$/, function *() {
@@ -370,8 +384,6 @@ app.use(route.get('/results', function *() {
 app.use(serve(__dirname + '/public'));
 
 var co = require("co");
-var request = require("co-request");
-
 var server = require('http').createServer(app.callback());
 var io = require('socket.io')(server);
 
