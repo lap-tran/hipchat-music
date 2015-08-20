@@ -30,6 +30,17 @@ var coRedisClient = coRedis(redisClient);
 var baseUrl = 'http://c4c2b4f7.ngrok.io';
 app.use(serve(__dirname + '/public'));
 
+var views = require('koa-views');
+app.use(views(__dirname + "/templates", {
+  map: {
+    html: 'underscore'
+  }
+}));
+
+var baseUrl = 'http://a95c4e51.ngrok.io';
+
+var hardcodedRoomId = '00000';
+
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
 // in this example, we can instead create the descriptor using a product-specific
@@ -142,7 +153,8 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
     var title = responseJson.items[0].snippet.title;
 
   // Add video to playlist of the room
-  var roomId = 'room-' + this.room.id;
+  // var roomId = 'room-' + this.room.id;
+  var roomId = 'room-' + hardcodedRoomId;
   redisClient.lrange(roomId, 0, -1, function(err, reply) {
     if (reply.indexOf(videoId) < 0) {
       redisClient.rpush([roomId, videoId], function (err, reply) {
@@ -165,7 +177,8 @@ addon.webhook('room_message', /^\/music\sclear$/, function *() {
 
   var that = this;
 
-  var roomId = 'room-' + this.room.id;
+  // var roomId = 'room-' + this.room.id;
+  var roomId = 'room-' + hardcodedRoomId;
   redisClient.del(roomId, function(err, reply) {
     that.roomClient.sendNotification('The playlist are now cleared');
   });
@@ -190,7 +203,8 @@ addon.webhook('room_message', /^\/music\sremove\s.*$/, function *() {
   }
 
   // Add video to playlist of the room
-  var roomId = 'room-' + this.room.id;
+  //var roomId = 'room-' + this.room.id;
+  var roomId = 'room-' + hardcodedRoomId;
   redisClient.lrange(roomId, 0, -1, function(err, reply) {
     videoIndex = reply.indexOf(videoId);
     if (videoIndex < 0) {
@@ -219,7 +233,8 @@ addon.webhook('room_message', /^\/music\sclear$/, function *() {
 
   var that = this;
 
-  var roomId = 'room-' + this.room.id;
+  // var roomId = 'room-' + this.room.id;
+  var roomId = 'room-' + hardcodedRoomId;
   redisClient.del(roomId, function(err, reply) {
     that.roomClient.sendNotification('The playlist are now cleared');
   });
@@ -244,7 +259,8 @@ addon.webhook('room_message', /^\/music\sremove\s.*$/, function *() {
   }
 
   // Add video to playlist of the room
-  var roomId = 'room-' + this.room.id;
+  // var roomId = 'room-' + this.room.id;
+  var roomId = 'room-' + hardcodedRoomId;
   redisClient.lrange(roomId, 0, -1, function(err, reply) {
     videoIndex = reply.indexOf(videoId);
     if (videoIndex < 0) {
@@ -285,11 +301,21 @@ app.use(route.get('/glance', function *(next){
 }));
 
 app.use(route.get('/page', function *(){
-    yield send(this, __dirname + "/templates/index.html");
+    // yield send(this, __dirname + "/templates/index.html");
+
+    var videos = yield * getVideos('00000');
+
+    console.log(videos);
+
+    yield this.render('index', {
+      videos: JSON.parse(videos)
+    });
 }));
 
-app.use(route.get('/room/:id', function *(id){
-    var roomId = 'room-' + id;
+function * getVideos(id) {
+  // var roomId = 'room-' + id;
+    var roomId = 'room-' + hardcodedRoomId;
+
     // var apiKey = process.env.YOUTUBE_API_KEY;
     var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
 
@@ -320,7 +346,13 @@ app.use(route.get('/room/:id', function *(id){
           });
         }
 
-    this.body = response.body;
+        return response.body;
+}
+
+app.use(route.get('/room/:id', function *(id){
+    var videosJson = yield* getVideos(id);
+
+    this.body = videosJson;
 }));
 
 addon.webhook('room_message', /^\/roomid$/, function *() {
