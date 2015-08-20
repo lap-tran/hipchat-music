@@ -10,18 +10,18 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
         height: '0',
         width: '0',
-        videoId: 'nfWlot6h_JM',
+        videoId: '-aEhUyrkDto',
         events: {
             'onReady': onPlayerReady,
             'onStateChange': onPlayerStateChange
         }
     });
-
 }
 
 function onPlayerReady(event) {
     event.target.playVideo();
-    updateTimeclasp();
+    player.setPlaybackQuality('small');
+    updateClipInfo();
 }
 
 function onPlayerStateChange(event) {
@@ -36,11 +36,41 @@ function stopVideo() {
     clearinterval(timer);
 }
 
+function updateClipInfo() {
+    updateTimeclasp();
+    updateDuration();
+    $('.playing .box-title').text(player.getVideoData().title);
+}
+
 function updateTimeclasp() {
     var run = function() {
-        var current = Math.round(player.getCurrentTime());
-        $('.timeclasp').text(current);
+        var current = secondsToTime(player.getCurrentTime());
+        $('.playing .timeclasp').text(current.m +':'+ current.s);
     };
 
     timer = setInterval(run, 1000);
+}
+
+function updateDuration() {
+    var duration = secondsToTime(player.getDuration());
+    $('.playing .duration').text(duration.m +':'+ duration.s);
+}
+
+function secondsToTime(secs)
+{
+    secs = Math.round(secs);
+    var hours = Math.floor(secs / (60 * 60));
+
+    var divisor_for_minutes = secs % (60 * 60);
+    var minutes = Math.floor(divisor_for_minutes / 60);
+
+    var divisor_for_seconds = divisor_for_minutes % 60;
+    var seconds = Math.ceil(divisor_for_seconds);
+
+    var obj = {
+        "h": (hours + '').length <= 1 ? '0' + hours : hours,
+        "m": (minutes + '').length <= 1 ? '0' + minutes : minutes,
+        "s": (seconds + '').length <= 1 ? '0' + seconds : seconds
+    };
+    return obj;
 }
