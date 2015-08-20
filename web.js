@@ -17,9 +17,12 @@ var send = require('koa-send');
 var serve = require('koa-static');
 
 var redis = require('redis');
+var coRedis = require("co-redis");
 var redisClient = redis.createClient();
+var coRedisClient = coRedis(redisClient);
 
-var baseUrl = 'http://10f87af7.ngrok.io';
+
+var baseUrl = 'http://acf1d01e.ngrok.io';
 
 // Now build and mount an AC add-on on the Koa app; we can either pass a full or
 // partial descriptor object to the 'addon()' method, or when we provide none, as
@@ -27,6 +30,7 @@ var baseUrl = 'http://10f87af7.ngrok.io';
 // builder API
 
 var request = require("co-request");
+var url = require('url');
 
 var addon = app.addon(
 {
@@ -111,7 +115,7 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
       that.roomClient.sendNotification('The song "' + videoId + '" already exsists in the playlist');
     }
   });
-  
+
 });
 
 addon.webhook('room_message', /^\/music\sclear$/, function *() {
@@ -188,22 +192,46 @@ app.use(route.get('/page', function *(){
     yield send(this, __dirname + "/templates/index.html");
 }));
 
-app.use(route.get('/search/:query', function *(query){
+app.use(route.get('/search', function *(){
     // var apiKey = process.env.YOUTUBE_API_KEY;
     var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
+    var query = this.query.p;
+    if (query == null) {
+        this.body = 'no search parameter p defined.';
+        return;
+    }
+    var queryUrl = url.parse(query, true);
+    var response;
 
-    var response = yield request.get({
-        url: 'https://www.googleapis.com/youtube/v3/search',
-        qs: {
-            key: apiKey,
-            part: 'snippet',
-            type: 'video',
-            maxResults: 1,
-            q: query,
-            videoCategoryId: 'music' // not sure if this makes results better or worse
-        }
-    });
-    this.body = response.body
+    if (queryUrl &&
+            queryUrl.host != null &&
+            queryUrl.host.indexOf('youtube.com') != -1 &&
+            queryUrl.query.v) {
+
+            response = yield request.get({
+                url: 'https://www.googleapis.com/youtube/v3/videos',
+                qs: {
+                    key: apiKey,
+                    part: 'snippet',
+                    id: queryUrl.query.v
+                }
+            });
+        } else {
+            response = yield request.get({
+
+                url: 'https://www.googleapis.com/youtube/v3/search',
+                qs: {
+                    key: apiKey,
+                    part: 'snippet',
+                    type: 'video',
+                    maxResults: 1,
+                    q: query,
+                    videoCategoryId: 'music' // not sure if this makes results better or worse
+                }
+            });
+    }
+
+    this.body = response.body;
 }));
 
 app.use(route.get('/room/:id', function *(id){
@@ -213,16 +241,16 @@ app.use(route.get('/room/:id', function *(id){
 
     var videoIds = null;
 
-    var response = '';
+    var response = {body: ''};
 
-    redisClient.lrange(roomId, 0, -1, function (err, reply) {
-      if (reply != undefined) {
+    var reply = yield coRedisClient.lrange(roomId, 0, -1);
+
+    if (reply != undefined) {
         videoIds = reply.join(',');
         if (videoIds == null || videoIds == undefined) {
           videoIds = '';
         }
-      }
-    });
+    }
 
     if (videoIds !== '') {
           response = yield request.get({
@@ -232,6 +260,7 @@ app.use(route.get('/room/:id', function *(id){
                   part: 'snippet',
                   type: 'video',
                   id: videoIds,
+                  fields: 'items(id,snippet(title,thumbnails(default)))',
                   videoCategoryId: 'music' // not sure if this makes results better or worse
               }
           });

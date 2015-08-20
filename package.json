@@ -26,9 +26,9 @@
     "tunnel": "~/ngrok http 3000"
   },
   "development": {
-    "localBaseUrl": "http://10f87af7.ngrok.io",
+    "localBaseUrl": "http://acf1d01e.ngrok.io",
     "port": 3000
-  },
+    },
   "production": {
     "localBaseUrl": "https://ac-koa-hipchat-greeter.herokuapp.com",
     "redisEnv": "REDISCLOUD_URL",
@@ -50,6 +50,7 @@
     "ac-koa-hipchat": "^0.2.14",
     "bunyan": "1.3.3",
     "bunyan-request": "^1.1.0",
+    "co-redis": "^1.2.1",
     "co-request": "^0.2.0",
     "co-views": "^2.0.0",
     "hapi": "^9.0.2",
@@ -57,9 +58,10 @@
     "koa-json": "^1.1.1",
     "koa-route": "^2.4.2",
     "koa-send": "^1.3.1",
-    "redis": "^0.12.1",
     "koa-static": "^1.4.9",
-    "socket.io": "^1.3.6"
+    "redis": "^0.12.1",
+    "socket.io": "^1.3.6",
+    "url": "^0.10.3"
   },
   "homepage": "https://bitbucket.org/hophan/hipchat-music#readme"
 }
