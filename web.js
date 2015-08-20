@@ -10,6 +10,8 @@ var app = ack(pkg);
 
 var json = require('koa-json');
 var route = require('koa-route');
+var serve = require('koa-static-folder');
+
 app.use(json());
 
 var send = require('koa-send');
@@ -75,6 +77,8 @@ addon.webhook('room_enter', function *() {
 addon.webhook('room_message', /^\/hello$/, function *() {
   yield this.roomClient.sendNotification('Hi, ' + this.sender.name + '!');
 });
+
+app.use(serve('./public'));
 
 app.use(route.get('/glance', function *(next){
   this.body = {
