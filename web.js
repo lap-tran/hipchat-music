@@ -56,7 +56,7 @@ var addon = app.addon(
         {
             "key": "hcstandup.sidebar",
             "name": {
-                "value": "Standup reports"
+                "value": "Music"
             },
             "location": "hipchat.sidebar.right",
             "url": baseUrl + "/page"
@@ -66,13 +66,13 @@ var addon = app.addon(
         {
             "key": "hcstandup.glance",
             "name": {
-                "value": "Standup"
+                "value": "Music"
             },
             "queryUrl": baseUrl + "/glance",
             "target": "hcstandup.sidebar",
             "icon": {
-                "url": baseUrl + "/static/info.png",
-                "url@2x": baseUrl + "/static/info@2x.png"
+                "url": baseUrl + "/img/icon.png",
+                "url@2x": baseUrl + "/img/icon2x.png"
             }
         }
     ]
@@ -136,9 +136,10 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
     var id = responseJson.items[0].id;
     var videoId = id.videoId ? id.videoId : id;
     var title = responseJson.items[0].snippet.title;
+    var senderName = this.sender.name;
 
     var storedObject = {
-        sender: this.sender.name,
+        sender: senderName,
         videoId: videoId
     };
 
@@ -227,14 +228,7 @@ app.use(route.get('/glance', function *(next){
   this.body = {
                 "label": {
                   "type": "html",
-                  "value": "<strong>2</strong> tasks"
-                },
-                "status": {
-                  "type": "lozenge",
-                  "value": {
-                    "label": "Late",
-                    "type": "error"
-                  }
+                  "value": "<strong>Music</strong>"
                 }
               };
 }));
@@ -250,6 +244,10 @@ app.use(route.get('/page', function *(){
     yield this.render('index', {
         videos: JSON.stringify(videos)
     });
+}));
+
+app.use(route.get('/img/:img', function *(img){
+    yield send(this, __dirname + "/img/" + img);
 }));
 
 function * getVideos(id) {
@@ -291,7 +289,7 @@ function * getVideos(id) {
 
     body.items = _.map(body.items, function(tubeSong) {
         var matchingStoredSong = _.find(storedSongs, function(stored) {
-            return stored.videoId = tubeSong.id;
+            return stored.videoId === tubeSong.id;
         });
         if (matchingStoredSong) {
             tubeSong.sender = matchingStoredSong.sender;
