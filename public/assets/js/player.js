@@ -48,7 +48,7 @@ function enableControls(enable) {
 
 function onYouTubeIframeAPIReady() {
     update(VIDEO_LIST.items, true);
-    
+
     player = createFirstPlay(currentTrack.id);
 
     createPlaylist(currentList);
@@ -237,9 +237,9 @@ function convert_time(duration) {
 
 function update(list, isChangeTrack) {
     currentList = list;
+    currentTrack = currentList.shift();
 
     if(isChangeTrack) {
-        currentTrack = currentList.shift();
         player = createFirstPlay(currentTrack.id);
     }
 
