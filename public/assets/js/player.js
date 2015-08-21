@@ -49,7 +49,7 @@ function enableControls(enable) {
 function onYouTubeIframeAPIReady() {
     update(VIDEO_LIST.items, true);
 
-    player = createFirstPlay(currentTrack.id);
+    //player = createFirstPlay(currentTrack.id);
 
     createPlaylist(currentList);
 }

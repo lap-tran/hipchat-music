@@ -36,7 +36,8 @@ app.use(views(__dirname + "/templates", {
 }));
 var _ = require('underscore-node');
 
-var baseUrl = pkg.development.localBaseUrl;
+var baseUrl1 = pkg.development.localBaseUrl;
+var baseUrl = "http://laps-macbook-pro.local:3000";
 
 var hardcodedRoomId = '00000';
 
