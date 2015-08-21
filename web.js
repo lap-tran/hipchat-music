@@ -162,7 +162,7 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
 
             console.log(videos);
 
-            sync.socket.emit('video changeplaylist', videos);
+            io.sockets.emit('video changeplaylist', videos);
         });
   });
 });

@@ -237,23 +237,27 @@ function convert_time(duration) {
 
 function update(list, isChangeTrack) {
     currentList = list;
-    currentTrack = currentList.shift();
 
-    if(isChangeTrack) {
-        player = createFirstPlay(currentTrack.id);
+    if (currentList.length > 0) {
+        currentTrack = currentList.shift();
+
+        if(isChangeTrack) {
+            player = createFirstPlay(currentTrack.id);
+        }
+
+        createPlaylist(currentList);
+        addListener();
     }
-
-    createPlaylist(currentList);
 }
 
 socket.on('video changevideo', function(body) {
-    console.log(body);
+    console.log(JSON.stringify(body.items));
 
     update(body.items, true);
 });
 
 socket.on('video changeplaylist', function(body) {
-    console.log(body);
+    console.log(JSON.stringify(body.items));
 
     update(body.items, false);
 });
