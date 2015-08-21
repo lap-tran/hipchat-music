@@ -136,9 +136,10 @@ addon.webhook('room_message', /^\/music\sadd\s.*$/, function *() {
     var id = responseJson.items[0].id;
     var videoId = id.videoId ? id.videoId : id;
     var title = responseJson.items[0].snippet.title;
+    var senderName = this.sender.name;
 
     var storedObject = {
-        sender: this.sender.name,
+        sender: senderName,
         videoId: videoId
     };
 
@@ -288,7 +289,7 @@ function * getVideos(id) {
 
     body.items = _.map(body.items, function(tubeSong) {
         var matchingStoredSong = _.find(storedSongs, function(stored) {
-            return stored.videoId = tubeSong.id;
+            return stored.videoId === tubeSong.id;
         });
         if (matchingStoredSong) {
             tubeSong.sender = matchingStoredSong.sender;
