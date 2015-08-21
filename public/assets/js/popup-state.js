@@ -7,7 +7,7 @@ var PopupState = (function() {
         setInterval(function() {
                 var time = new Date().getTime();
                 localStorage.setItem(key(name), time);
-            }, 500);
+            }, 300);
     }
 
     function trackClose(name) {
