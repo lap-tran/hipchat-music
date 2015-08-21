@@ -64,7 +64,7 @@ function init(io, redisClient, coRedisClient, request) {
 
                     var body = yield *_getVideo(coRedisClient, request);
                     console.log(body);
-                    socket.emit('video changevideo', body);
+                    io.sockets.emit('video changevideo', body);
                 });
             }
 
@@ -90,10 +90,11 @@ function init(io, redisClient, coRedisClient, request) {
                 var body = yield *_getVideo(coRedisClient, request);
 
                 var items = _.reduce(body.items, function(acc, video) {
+
                     if (video.id === data.videoId) {
                         return [video].concat(acc);
                     } else {
-                        return acc.push(video);
+                        return acc.concat([video]);
                     }
                 }, []);
 
@@ -102,7 +103,7 @@ function init(io, redisClient, coRedisClient, request) {
                 body.items = items;
 
                 that.currentSong = {};
-                socket.emit('video changevideo', body);
+                io.sockets.emit('video changevideo', body);
             });
         });
 
