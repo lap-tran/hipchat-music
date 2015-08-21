@@ -117,7 +117,8 @@ function addListener() {
         update(newList);*/
 
         socket.emit('video.change.track', {
-            videoId: videoId
+            videoId: videoId,
+            currentId: player.getVideoData().video_id
         });
     });
 }

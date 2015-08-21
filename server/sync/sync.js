@@ -85,7 +85,7 @@ function init(io, redisClient, coRedisClient, request) {
         socket.on('video.change.track', function(data) {
             // send notification to all players
             co(function *() {
-                yield *_removeSongFromRedis(coRedisClient, that.currentSong.song, 'room-00000', co);
+                yield *_removeSongFromRedis(coRedisClient, data.currentId, 'room-00000', co);
 
                 var body = yield *_getVideo(coRedisClient, request);
 
@@ -118,89 +118,86 @@ function init(io, redisClient, coRedisClient, request) {
 };
 
 function *_removeSongFromRedis(coRedisClient, video, roomId, co) {
-        console.log("remove song " + video);
+    console.log("remove song " + video);
 
-    // coRedisClient.ltrim(roomId, 1, )
+    var allSongs = yield coRedisClient.lrange(roomId, 0, -1);
 
-        var allSongs = yield coRedisClient.lrange(roomId, 0, -1);
+    console.log("REPLYxxx ---- " + JSON.stringify(allSongs));
 
-        console.log("REPLYxxx ---- " + JSON.stringify(allSongs));
+    var videoIndex = -1;
+    for (var i = 0; i < allSongs.length; i++) {
+        console.log(allSongs[i]);
+        var vo = JSON.parse(allSongs[i]);
 
-        var videoIndex = -1;
+        if (vo.videoId === video) {
+            videoIndex = i;
+            break;
+        }
+    }
+
+    if (videoIndex < 0) {
+        console.log('The song "' + video + '" doesn\'t exsists in the playlist');
+    } else {
+        allSongs.splice(videoIndex, 1);
+        var newList = [roomId];
         for (var i = 0; i < allSongs.length; i++) {
-            console.log(allSongs[i]);
-            var vo = JSON.parse(allSongs[i]);
-
-            if (vo.videoId === video) {
-                videoIndex = i;
-                break;
-            }
-
+            newList.push(allSongs[i]);
         }
-
-        if (videoIndex < 0) {
-            console.log('The song "' + video + '" doesn\'t exsists in the playlist');
-        } else {
-            allSongs.splice(videoIndex, 1);
-            var newList = [roomId];
-            for (var i = 0; i < allSongs.length; i++) {
-                newList.push(allSongs[i]);
-            }
-            var y = yield coRedisClient.del(roomId);
-            console.log("DEL ROOm " + y);
-            yield coRedisClient.rpush(newList);
-            console.log("REMOVE to " + newList);
-        }
+        var y = yield coRedisClient.del(roomId);
+        console.log("DEL ROOm " + y);
+        yield coRedisClient.rpush(newList);
+        console.log("REMOVE to " + newList);
+    }
 }
 
 function *_getVideo(coRedisClient, request) {
-        // var roomId = 'room-' + id;
-        var roomId = 'room-00000';
+    // var roomId = 'room-' + id;
+    var roomId = 'room-00000';
 
-        // var apiKey = process.env.YOUTUBE_API_KEY;
-        var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
+    // var apiKey = process.env.YOUTUBE_API_KEY;
+    var apiKey = 'AIzaSyA7Mc1ZQMzlQihPgjYE2v2ktxJ-ODLEl0c';
 
-        var videoIds = '';
-        var response;
+    var videoIds = '';
+    var response;
 
-        var storedSongs = yield coRedisClient.lrange(roomId, 0, -1);
-        storedSongs = _.map(storedSongs, function (string) {
-            return JSON.parse(string);
-        });
+    var storedSongs = yield coRedisClient.lrange(roomId, 0, -1);
+    storedSongs = _.map(storedSongs, function (string) {
+        return JSON.parse(string);
+    });
 
-        if (typeof storedSongs === "object") {
-            videoIds = _.pluck(storedSongs, 'videoId').join(',');
-        }
-
-        if (videoIds !== '') {
-            response = yield request.get({
-                url: 'https://www.googleapis.com/youtube/v3/videos',
-                qs: {
-                    key: apiKey,
-                    part: 'contentDetails,snippet',
-                    type: 'video',
-                    id: videoIds,
-                    fields: 'items(id,snippet(title,thumbnails(default)),contentDetails(duration))',
-                    videoCategoryId: 'music' // not sure if this makes results better or worse
-                }
-            });
-        } else {
-            return {items: {}};
-        }
-
-        var body = JSON.parse(response.body);
-
-        body.items = _.map(body.items, function(tubeSong) {
-            var matchingStoredSong = _.find(storedSongs, function(stored) {
-                return stored.videoId = tubeSong.id;
-            });
-            if (matchingStoredSong) {
-                tubeSong.sender = matchingStoredSong.sender;
-            }
-            return tubeSong
-        });
-
-        return body;
+    if (typeof storedSongs === "object") {
+        videoIds = _.pluck(storedSongs, 'videoId').join(',');
     }
+
+    if (videoIds !== '') {
+        response = yield request.get({
+            url: 'https://www.googleapis.com/youtube/v3/videos',
+            qs: {
+                key: apiKey,
+                part: 'contentDetails,snippet',
+                type: 'video',
+                id: videoIds,
+                fields: 'items(id,snippet(title,thumbnails(default)),contentDetails(duration))',
+                videoCategoryId: 'music' // not sure if this makes results better or worse
+            }
+        });
+    } else {
+        return {items: {}};
+    }
+
+    var body = JSON.parse(response.body);
+
+    body.items = _.map(body.items, function(tubeSong) {
+        var matchingStoredSong = _.find(storedSongs, function(stored) {
+            return stored.videoId = tubeSong.id;
+        });
+        if (matchingStoredSong) {
+            tubeSong.sender = matchingStoredSong.sender;
+        }
+        return tubeSong
+    });
+
+    return body;
+}
 
 module.exports = new Sync();
