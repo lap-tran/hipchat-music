@@ -23,12 +23,18 @@ var render = require('./lib/render');
 //var baseUrl = require('./lib/app-base-url.js').baseUrl;
 
 // THUAN: Redis
-var redisURL = 'ec2-54-83-205-71.compute-1.amazonaws.com';
-var redisPort = '12239';
+// var redisURL = 'ec2-54-83-205-71.compute-1.amazonaws.com';
+// var redisPort = '12239';
+
 var redis = require('redis');
+var url = require('url');
+var redisURL = url.parse(process.env.REDIS_URL);
+var redisClient = redis.createClient(redisURL.port, redisURL.hostname);
+redisClient.auth(redisURL.auth.split(":")[1]);
+
 var coRedis = require("co-redis");
-var redisClient = redis.createClient(redisPort, redisURL, { });
-redisClient.auth('p73ka4g0tska24hm0rvtvc6nvu')
+// var redisClient = redis.createClient(redisPort, redisURL, { });
+// redisClient.auth('p73ka4g0tska24hm0rvtvc6nvu')
 var coRedisClient = coRedis(redisClient);
 
 app.use(serve(__dirname + '/public'));
