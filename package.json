@@ -31,7 +31,7 @@
   },
   "production": {
     "localBaseUrl": "https://hiptunes.herokuapp.com/",
-    "redisEnv": "REDISCLOUD_URL",
+    "redisEnv": "REDIS_URL",
     "port": "$PORT"
   },
   "repository": {
