@@ -1,3 +1,5 @@
+var cool = require('cool-ascii-faces');
+
 // Require the 'ac-koa' module, and then tell it to load the 'hipchat' adapter
 // from 'ac-koa-hipchat'
 var ack = require('ac-koa').require('hipchat');
@@ -315,6 +317,10 @@ app.use(route.get('/template', function *() {
 
 app.use(route.get('/results', function *() {
     yield send(this, __dirname + '/templates/results.html');
+}));
+
+app.use(route.get('/cool', function *() {
+    response.send(cool());
 }));
 
 app.use(serve(__dirname + '/public'));
