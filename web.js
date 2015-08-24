@@ -23,9 +23,11 @@ var render = require('./lib/render');
 //var baseUrl = require('./lib/app-base-url.js').baseUrl;
 
 // THUAN: Redis
+var redisURL = 'redis://h:p5hl9ggt4j40kr9vv3gof1djtqt@ec2-54-83-205-71.compute-1.amazonaws.com';
+var redisPort = '12239';
 var redis = require('redis');
 var coRedis = require("co-redis");
-var redisClient = redis.createClient();
+var redisClient = redis.createClient(redisPort, redisURL, {});
 var coRedisClient = coRedis(redisClient);
 
 app.use(serve(__dirname + '/public'));
