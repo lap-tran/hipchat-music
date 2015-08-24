@@ -30,7 +30,7 @@
     "port": 3000
   },
   "production": {
-    "localBaseUrl": "https://ac-koa-hipchat-greeter.herokuapp.com",
+    "localBaseUrl": "https://hiptunes.herokuapp.com/",
     "redisEnv": "REDISCLOUD_URL",
     "port": "$PORT"
   },
