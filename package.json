@@ -30,7 +30,7 @@
     "port": 8080
   },
   "production": {
-    "localBaseUrl": "https://hiptunes.herokuapp.com/",
+    "localBaseUrl": "https://hiptunes.herokuapp.com",
     "redisEnv": "REDISCLOUD_URL",
     "port": "$PORT"
   },
