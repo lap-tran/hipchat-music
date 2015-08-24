@@ -26,8 +26,8 @@
     "tunnel": "~/ngrok http 3000"
   },
   "development": {
-    "localBaseUrl": "http://5ae70f7b.ngrok.io",
-    "port": 3000
+    "localBaseUrl": "https://hiptunes.herokuapp.com",
+    "port": 8080
   },
   "production": {
     "localBaseUrl": "https://hiptunes.herokuapp.com/",
