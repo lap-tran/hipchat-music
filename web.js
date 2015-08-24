@@ -28,7 +28,7 @@ var redisPort = '12239';
 var redis = require('redis');
 var coRedis = require("co-redis");
 var redisClient = redis.createClient(redisPort, redisURL, { });
-redisClient.auth('p5hl9ggt4j40kr9vv3gof1djtqt')
+redisClient.auth('p73ka4g0tska24hm0rvtvc6nvu')
 var coRedisClient = coRedis(redisClient);
 
 app.use(serve(__dirname + '/public'));
