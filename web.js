@@ -38,8 +38,10 @@ app.use(views(__dirname + "/templates", {
 }));
 var _ = require('underscore-node');
 
-var baseUrl1 = pkg.development.localBaseUrl;
-var baseUrl = "http://laps-macbook-pro.local:3000";
+// var baseUrl1 = pkg.development.localBaseUrl;
+// var baseUrl = "http://laps-macbook-pro.local:3000";
+var baseUrl = "https://hiptunes.herokuapp.com/";
+var baseUrl1 = "https://hiptunes.herokuapp.com/";
 
 var hardcodedRoomId = '00000';
 
