@@ -346,7 +346,7 @@ if (process.env.REDISTOGO_URL) {
 // app.use(serve(__dirname + '/public'));
 
 // var co = require("co");
-// var server = require('http').createServer(app.callback());
+var server = require('http').createServer(app.callback());
 // var io = require('socket.io')(server);
 
 // var _ = require('underscore');
