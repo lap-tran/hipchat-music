@@ -338,4 +338,4 @@ var _ = require('underscore');
 var sync = require('./server/sync/sync.js');
 sync.init(io, redisClient, coRedisClient, request);
 
-server.listen(3000);
+server.listen();
