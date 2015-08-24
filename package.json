@@ -9,7 +9,7 @@
   },
   "license": "ISC",
   "engines": {
-    "node": "~0.11.13"
+    "node": "~0.11.9"
   },
   "main": "web.js",
   "config": {
