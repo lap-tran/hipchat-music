@@ -26,11 +26,20 @@ var render = require('./lib/render');
 // var redisURL = 'ec2-54-83-205-71.compute-1.amazonaws.com';
 // var redisPort = '12239';
 
-var redis = require('redis');
-var url = require('url');
-var redisURL = url.parse(process.env.REDIS_URL);
-var redisClient = redis.createClient(redisURL.port, redisURL.hostname);
-redisClient.auth(redisURL.auth.split(":")[1]);
+if (process.env.REDISTOGO_URL) {
+    var rtg   = require("url").parse(process.env.REDISTOGO_URL);
+    var redisClient = require("redis").createClient(rtg.port, rtg.hostname);
+
+    redisClient.auth(rtg.auth.split(":")[1]);
+} else {
+    var redisClient = require("redis").createClient();
+}
+
+// var redis = require('redis');
+// var url = require('url');
+// var redisURL = url.parse(process.env.REDIS_URL);
+// var redisClient = redis.createClient(redisURL.port, redisURL.hostname);
+// redisClient.auth(redisURL.auth.split(":")[1]);
 
 var coRedis = require("co-redis");
 // var redisClient = redis.createClient(redisPort, redisURL, { });
