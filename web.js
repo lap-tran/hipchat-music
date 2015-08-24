@@ -351,7 +351,7 @@ var io = require('socket.io')(server);
 
 var _ = require('underscore');
 
-var sync = require('./server/sync/sync.js');
-sync.init(io, redisClient, coRedisClient, request);
+// var sync = require('./server/sync/sync.js');
+// sync.init(io, redisClient, coRedisClient, request);
 
 server.listen();
