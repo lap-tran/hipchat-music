@@ -23,7 +23,7 @@ var render = require('./lib/render');
 //var baseUrl = require('./lib/app-base-url.js').baseUrl;
 
 // THUAN: Redis
-var redisURL = 'redis://lec2-54-83-205-71.compute-1.amazonaws.com';
+var redisURL = 'redis://ec2-54-83-205-71.compute-1.amazonaws.com';
 var redisPort = '12239';
 var redis = require('redis');
 var coRedis = require("co-redis");
