@@ -16,7 +16,7 @@
     "name": "hipchat-music-2"
   },
   "scripts": {
-    "start": "node --harmony --use_strict --harmony_generators web.js",
+    "start": "node --harmony --harmony_generators web.js",
     "prepublish": "npm run test",
     "predeploy": "sed \"s/{{version}}/$npm_package_version/\" \"$npm_package_config_name.sd.yml\" > \"/tmp/$npm_package_config_name.sd.yml\"",
     "deploy": "micros service:deploy $npm_package_config_name -f \"/tmp/$npm_package_config_name.sd.yml\"",
