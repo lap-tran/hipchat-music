@@ -1,6 +1,6 @@
 {
-  "name": "hipchat-music-2",
-  "displayName": "HipChat Music 2",
+  "name": "hiptunes",
+  "displayName": "Hiptunes",
   "description": "Listen to the music together",
   "version": "0.1.0",
   "author": {
@@ -13,7 +13,7 @@
   },
   "main": "web.js",
   "config": {
-    "name": "hipchat-music-2"
+    "name": "hiptunes"
   },
   "scripts": {
     "start": "node --harmony --harmony_generators web.js",
